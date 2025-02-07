@@ -5,9 +5,9 @@
 //  Created by Yannis De Cleene on 27/01/2025.
 //
 
-import Foundation
 import AccessorySetupKit
 import CoreBluetooth
+import Foundation
 import SwiftUI
 
 /// Manages Bluetooth communication with the ring device
@@ -22,90 +22,91 @@ import SwiftUI
 class RingSessionManager: NSObject {
     /// Indicates if a Bluetooth connection is currently established
     var peripheralConnected = false
-    
+
     /// Tracks the state of the accessory picker UI
     var pickerDismissed = true
-    
+
     /// Currently connected ring accessory
     var currentRing: ASAccessory?
-    
+
     /// Session manager for accessory setup and pairing
     private var session = ASAccessorySession()
-    
+
     /// Bluetooth central manager for scanning and connecting
     private var manager: CBCentralManager?
-    
+
     /// Connected Bluetooth peripheral (ring device)
     private var peripheral: CBPeripheral?
-    
+
     /// Characteristic for sending commands to the ring
     private var uartRxCharacteristic: CBCharacteristic?
-    
+
     /// Characteristic for receiving data from the ring
     private var uartTxCharacteristic: CBCharacteristic?
-    
+
     /// UUID for the ring's main UART service
     private static let ringServiceUUID = "6E40FFF0-B5A3-F393-E0A9-E50E24DCCA9E"
-    
+
     /// UUID for sending commands to the ring (write characteristic)
     private static let uartRxCharacteristicUUID = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
-    
+
     /// UUID for receiving data from the ring (notify characteristic)
     private static let uartTxCharacteristicUUID = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
-    
+
     /// UUID for the standard Bluetooth device information service
     private static let deviceInfoServiceUUID = "0000180A-0000-1000-8000-00805F9B34FB"
-    
+
     /// UUID for hardware revision characteristic
     private static let deviceHardwareUUID = "00002A27-0000-1000-8000-00805F9B34FB"
-    
+
     /// UUID for firmware revision characteristic
     private static let deviceFirmwareUUID = "00002A26-0000-1000-8000-00805F9B34FB"
-    
+
     /// Command to make the ring's LED blink twice (0x10)
     /// Used for testing connectivity
     private static let CMD_BLINK_TWICE: UInt8 = 16
-    
+
     /// Command to request battery status (0x03)
     /// Returns battery level and charging state
     private static let CMD_BATTERY: UInt8 = 3
-    
+
     /// Command to read historical heart rate data (0x15)
     /// Returns heart rate measurements for a specified time period
     private static let CMD_READ_HEART_RATE: UInt8 = 21
-    
+
     /// Command to start real-time sensor readings (0x69)
     /// Used to begin continuous streaming of sensor data
     private static let CMD_START_REAL_TIME: UInt8 = 105
-    
+
     /// Command to stop real-time sensor readings (0x6A)
     /// Used to end continuous streaming of sensor data
     private static let CMD_STOP_REAL_TIME: UInt8 = 106
-    
+
     private let hrp = HeartRateLogParser()
-    
+
     private static let ring: ASPickerDisplayItem = {
         let descriptor = ASDiscoveryDescriptor()
         descriptor.bluetoothServiceUUID = CBUUID(string: ringServiceUUID)
-        
+
         return ASPickerDisplayItem(
             name: "COLMI R02 Ring",
             productImage: UIImage(named: "colmi")!,
             descriptor: descriptor
         )
     }()
-    
+
     private var characteristicsDiscovered = false
-    
+
     var batteryStatusCallback: ((BatteryInfo) -> Void)?
     var heartRateLogCallback: ((HeartRateLog) -> Void)?
-    
+
     override init() {
         super.init()
-        self.session.activate(on: DispatchQueue.main, eventHandler: handleSessionEvent(event:))
+        session.activate(on: DispatchQueue.main, eventHandler: handleSessionEvent(event:))
     }
-    
+
     // MARK: - RingSessionManager actions
+
     func presentPicker() {
         session.showPicker(for: [Self.ring]) { error in
             if let error {
@@ -113,20 +114,20 @@ class RingSessionManager: NSObject {
             }
         }
     }
-    
+
     func removeRing() {
         guard let currentRing else { return }
-        
+
         if peripheralConnected {
             disconnect()
         }
-        
+
         session.removeAccessory(currentRing) { _ in
             self.currentRing = nil
             self.manager = nil
         }
     }
-    
+
     func connect() {
         guard
             let manager, manager.state == .poweredOn,
@@ -137,25 +138,26 @@ class RingSessionManager: NSObject {
         let options: [String: Any] = [
             CBConnectPeripheralOptionNotifyOnConnectionKey: true,
             CBConnectPeripheralOptionNotifyOnDisconnectionKey: true,
-            CBConnectPeripheralOptionStartDelayKey: 1
+            CBConnectPeripheralOptionStartDelayKey: 1,
         ]
         manager.connect(peripheral, options: options)
     }
-    
+
     func disconnect() {
         guard let peripheral, let manager else { return }
         manager.cancelPeripheralConnection(peripheral)
     }
-    
+
     // MARK: - ASAccessorySession functions
+
     private func saveRing(ring: ASAccessory) {
         currentRing = ring
-        
+
         if manager == nil {
             manager = CBCentralManager(delegate: self, queue: nil)
         }
     }
-    
+
     private func handleSessionEvent(event: ASAccessoryEvent) {
         switch event.eventType {
         case .accessoryAdded, .accessoryChanged:
@@ -165,8 +167,8 @@ class RingSessionManager: NSObject {
             guard let ring = session.accessories.first else { return }
             saveRing(ring: ring)
         case .accessoryRemoved:
-            self.currentRing = nil
-            self.manager = nil
+            currentRing = nil
+            manager = nil
         case .pickerDidPresent:
             pickerDismissed = false
         case .pickerDidDismiss:
@@ -178,6 +180,7 @@ class RingSessionManager: NSObject {
 }
 
 // MARK: - CBCentralManagerDelegate
+
 extension RingSessionManager: CBCentralManagerDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         print("Central manager state: \(central.state)")
@@ -197,28 +200,29 @@ extension RingSessionManager: CBCentralManagerDelegate {
             peripheral = nil
         }
     }
-    
+
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         print("DEBUG: Connected to peripheral: \(peripheral)")
         peripheral.delegate = self
         print("DEBUG: Discovering services...")
         peripheral.discoverServices([CBUUID(string: Self.ringServiceUUID), CBUUID(string: Self.deviceInfoServiceUUID)])
-        
+
         peripheralConnected = true
     }
-    
+
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: (any Error)?) {
         print("Disconnected from peripheral: \(peripheral)")
         peripheralConnected = false
         characteristicsDiscovered = false
     }
-    
+
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: (any Error)?) {
         print("Failed to connect to peripheral: \(peripheral), error: \(error.debugDescription)")
     }
 }
 
 // MARK: - CBPeripheralDelegate
+
 extension RingSessionManager: CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: (any Error)?) {
         print("DEBUG: Services discovery callback, error: \(String(describing: error))")
@@ -226,7 +230,7 @@ extension RingSessionManager: CBPeripheralDelegate {
             print("DEBUG: No services found or error occurred")
             return
         }
-        
+
         print("DEBUG: Found \(services.count) services")
         for service in services {
             switch service.uuid {
@@ -234,7 +238,7 @@ extension RingSessionManager: CBPeripheralDelegate {
                 print("DEBUG: Found ring service, discovering characteristics...")
                 peripheral.discoverCharacteristics([
                     CBUUID(string: Self.uartRxCharacteristicUUID),
-                    CBUUID(string: Self.uartTxCharacteristicUUID)
+                    CBUUID(string: Self.uartTxCharacteristicUUID),
                 ], for: service)
             case CBUUID(string: Self.deviceInfoServiceUUID):
                 print("DEBUG: Found device info service")
@@ -243,23 +247,23 @@ extension RingSessionManager: CBPeripheralDelegate {
             }
         }
     }
-    
+
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         print("DEBUG: Characteristics discovery callback, error: \(String(describing: error))")
         guard error == nil, let characteristics = service.characteristics else {
             print("DEBUG: No characteristics found or error occurred")
             return
         }
-        
+
         print("DEBUG: Found \(characteristics.count) characteristics")
         for characteristic in characteristics {
             switch characteristic.uuid {
             case CBUUID(string: Self.uartRxCharacteristicUUID):
                 print("DEBUG: Found UART RX characteristic")
-                self.uartRxCharacteristic = characteristic
+                uartRxCharacteristic = characteristic
             case CBUUID(string: Self.uartTxCharacteristicUUID):
                 print("DEBUG: Found UART TX characteristic")
-                self.uartTxCharacteristic = characteristic
+                uartTxCharacteristic = characteristic
                 peripheral.setNotifyValue(true, for: characteristic)
             default:
                 print("DEBUG: Found other characteristic: \(characteristic.uuid)")
@@ -267,15 +271,15 @@ extension RingSessionManager: CBPeripheralDelegate {
         }
         characteristicsDiscovered = true
     }
-    
+
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         guard let value = characteristic.value else {
             print("Failed to read characteristic value: \(String(describing: error))")
             return
         }
-        
+
         let packet = [UInt8](value)
-        
+
         switch packet[0] {
         case RingSessionManager.CMD_BATTERY:
             handleBatteryResponse(packet: packet)
@@ -286,7 +290,7 @@ extension RingSessionManager: CBPeripheralDelegate {
         case RingSessionManager.CMD_START_REAL_TIME:
             let readingType = RealTimeReading(rawValue: packet[1]) ?? .heartRate
             let errorCode = packet[2]
-            
+
             if errorCode == 0 {
                 let readingValue = packet[3]
                 print("Real-Time Reading - Type: \(readingType), Value: \(readingValue)")
@@ -296,16 +300,16 @@ extension RingSessionManager: CBPeripheralDelegate {
         default:
             break
         }
-        
+
         if characteristic.uuid == CBUUID(string: Self.uartTxCharacteristicUUID) {
             if let value = characteristic.value {
                 print("Received value: \(value) : \([UInt8](value))")
             }
         }
     }
-    
+
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
-        if let error = error {
+        if let error {
             print("Write to characteristic failed: \(error.localizedDescription)")
         } else {
             print("Write to characteristic successful")
@@ -324,13 +328,13 @@ extension RingSessionManager {
             print("Failed to create blink twice packet: \(error)")
         }
     }
-    
+
     private func sendPacket(packet: [UInt8]) {
         guard let uartRxCharacteristic, let peripheral else {
             print("Cannot send packet. Peripheral or characteristic not ready.")
             return
         }
-        
+
         let data = Data(packet)
         peripheral.writeValue(data, for: uartRxCharacteristic, type: .withResponse)
     }
@@ -363,7 +367,7 @@ extension RingSessionManager {
     func startRealTimeStreaming(type: RealTimeReading) {
         sendRealTimeCommand(command: RingSessionManager.CMD_START_REAL_TIME, type: type, action: .start)
     }
-    
+
     /// Continues an active real-time streaming session
     ///
     /// Sends a continuation packet to maintain the streaming connection.
@@ -373,7 +377,7 @@ extension RingSessionManager {
     func continueRealTimeStreaming(type: RealTimeReading) {
         sendRealTimeCommand(command: RingSessionManager.CMD_START_REAL_TIME, type: type, action: .continue)
     }
-    
+
     /// Stops real-time streaming for a specific sensor type
     ///
     /// Sends a command to the ring to stop sending continuous updates.
@@ -388,7 +392,7 @@ extension RingSessionManager {
     func stopRealTimeStreaming(type: RealTimeReading) {
         sendRealTimeCommand(command: RingSessionManager.CMD_STOP_REAL_TIME, type: type, action: nil)
     }
-    
+
     /// Sends a real-time command packet to the ring device
     ///
     /// This internal method handles the creation and transmission of real-time
@@ -403,14 +407,14 @@ extension RingSessionManager {
             print("Cannot send real-time command. Peripheral or characteristic not ready.")
             return
         }
-        
+
         var packetData: [UInt8] = [type.rawValue]
-        if let action = action {
+        if let action {
             packetData.append(action.rawValue)
         } else {
             packetData.append(contentsOf: [0, 0])
         }
-        
+
         do {
             let packet = try makePacket(command: command, subData: packetData)
             let data = Data(packet)
@@ -429,29 +433,29 @@ extension RingSessionManager {
             print("Cannot send battery request. Peripheral or characteristic not ready.")
             return
         }
-        
+
         do {
             let packet = try makePacket(command: RingSessionManager.CMD_BATTERY)
             let data = Data(packet)
             peripheral.writeValue(data, for: uartRxCharacteristic, type: .withResponse)
-            
+
             // Store completion handler to call when data is received
-            self.batteryStatusCallback = completion
+            batteryStatusCallback = completion
         } catch {
             print("Failed to create battery packet: \(error)")
         }
     }
-    
+
     private func handleBatteryResponse(packet: [UInt8]) {
         guard packet[0] == RingSessionManager.CMD_BATTERY else {
             print("Invalid battery packet received.")
             return
         }
-        
+
         let batteryLevel = Int(packet[1])
         let charging = packet[2] != 0
         let batteryInfo = BatteryInfo(batteryLevel: batteryLevel, charging: charging)
-        
+
         // Trigger stored callback with battery info
         batteryStatusCallback?(batteryInfo)
         batteryStatusCallback = nil
@@ -466,41 +470,41 @@ extension RingSessionManager {
             print("Cannot send heart rate log request. Peripheral or characteristic not ready.")
             return
         }
-        
+
         do {
             guard let today = startOfDay(for: Date.now) else {
                 return
             }
             let target = today.convertToTimeZone(initTimeZone: .gmt, timeZone: .current)
-            
+
             guard let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: target) else {
                 return
             }
-            
+
             let packet = try readXPacket(for: target)
             let data = Data(packet)
             peripheral.writeValue(data, for: uartRxCharacteristic, type: .withResponse)
-            
+
             print("HRL Commmand Sent")
-            
+
             // Store completion handler to call when data is received
-            self.heartRateLogCallback = completion
+            heartRateLogCallback = completion
         } catch {
             print("Failed to create hrl packet: \(error)")
         }
     }
-    
+
     private func handleHeartRateLogResponse(packet: [UInt8]) {
 //        guard packet[0] == RingSessionManager.CMD_READ_HEART_RATE else {
 //            print("Invalid heart rate log packet received.")
 //            return
 //        }
-        
+
         guard packet[0] == Counter.shared.CMD_X else {
             print("Invalid heart rate log packet received.")
             return
         }
-        
+
         guard let log = hrp.parse(packet: packet) as? HeartRateLog else {
             return
         }

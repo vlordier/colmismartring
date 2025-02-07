@@ -47,17 +47,17 @@ func datesBetween(start: Date, end: Date) throws -> [Date] {
     guard start <= end else {
         throw NSError(domain: "InvalidRange", code: 1, userInfo: [NSLocalizedDescriptionKey: "Start date is after end date"])
     }
-    
+
     var dates: [Date] = []
     let calendar = Calendar.current
     var current = startOfDay(for: start)!
-    
+
     while current <= end {
         dates.append(current)
         guard let next = calendar.date(byAdding: .day, value: 1, to: current) else { break }
         current = next
     }
-    
+
     return dates
 }
 
@@ -68,7 +68,7 @@ func datesBetween(start: Date, end: Date) throws -> [Date] {
 ///
 /// - Returns: Current date and time as Date object
 func now() -> Date {
-    return Date()
+    Date()
 }
 
 /// Calculates the number of minutes elapsed since midnight for a given date

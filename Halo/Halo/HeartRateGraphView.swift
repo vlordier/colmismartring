@@ -5,8 +5,8 @@
 //  Created by Yannis De Cleene on 27/01/2025.
 //
 
-import SwiftUI
 import Charts
+import SwiftUI
 
 struct HeartRateDataPoint: Identifiable {
     let id = UUID()

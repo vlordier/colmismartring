@@ -5,14 +5,14 @@
 //  Created by Yannis De Cleene on 20/01/2025.
 //
 
-import SwiftUI
 import AccessorySetupKit
+import SwiftUI
 
 struct ContentView: View {
     @State var ringSessionManager = RingSessionManager()
     @State var batteryInfo: BatteryInfo?
     @State private var data: [HeartRateDataPoint] = []
-    
+
     var body: some View {
         List {
             Section("MY DEVICE", content: {
@@ -30,7 +30,7 @@ struct ContentView: View {
                     }
                 }
             })
-            
+
             Section("Increment", content: {
                 Button(action: {
                     print("Last CMD_X: \(Counter.shared.CMD_X)")
@@ -45,7 +45,7 @@ struct ContentView: View {
                         .cornerRadius(8)
                 }
             })
-            
+
             Section("Blink Twice", content: {
                 Button(action: {
                     ringSessionManager.sendBlinkTwiceCommand()
@@ -59,7 +59,7 @@ struct ContentView: View {
                         .cornerRadius(8)
                 }
             })
-            
+
             Section("X", content: {
                 Button(action: {
                     ringSessionManager.sendXCommand()
@@ -73,7 +73,7 @@ struct ContentView: View {
                         .cornerRadius(8)
                 }
             })
-            
+
             Section("X Log", content: {
                 Button(action: {
                     ringSessionManager.getHeartRateLog { hrl in
@@ -95,7 +95,7 @@ struct ContentView: View {
                         .cornerRadius(8)
                 }
             })
-            
+
             Section("Battery Status", content: {
                 Button(action: {
                     ringSessionManager.getBatteryStatus { info in
@@ -110,13 +110,13 @@ struct ContentView: View {
                         .foregroundColor(.white)
                         .cornerRadius(8)
                 }
-                
+
                 if let info = batteryInfo {
                     Text("Battery Level: \(info.batteryLevel)%")
                     Text("Charging: \(info.charging ? "Yes" : "No")")
                 }
             })
-            
+
             Section("Heart Rate Log", content: {
                 Button(action: {
                     ringSessionManager.getHeartRateLog { hrl in
@@ -138,10 +138,9 @@ struct ContentView: View {
                         .cornerRadius(8)
                 }
             })
-            
+
             HeartRateGraphView(data: data)
-            
-            
+
             Section("Heart Rate", content: {
                 Button(action: {
                     ringSessionManager.startRealTimeStreaming(type: .heartRate)
@@ -154,7 +153,7 @@ struct ContentView: View {
                         .foregroundColor(.white)
                         .cornerRadius(8)
                 }
-                
+
                 Button(action: {
                     ringSessionManager.continueRealTimeStreaming(type: .heartRate)
                 }) {
@@ -166,7 +165,7 @@ struct ContentView: View {
                         .foregroundColor(.white)
                         .cornerRadius(8)
                 }
-                
+
                 Button(action: {
                     ringSessionManager.stopRealTimeStreaming(type: .heartRate)
                 }) {
@@ -179,7 +178,7 @@ struct ContentView: View {
                         .cornerRadius(8)
                 }
             })
-            
+
             Section("SPO2", content: {
                 Button(action: {
                     ringSessionManager.startRealTimeStreaming(type: .spo2)
@@ -192,7 +191,7 @@ struct ContentView: View {
                         .foregroundColor(.white)
                         .cornerRadius(8)
                 }
-                
+
                 Button(action: {
                     ringSessionManager.continueRealTimeStreaming(type: .spo2)
                 }) {
@@ -204,7 +203,7 @@ struct ContentView: View {
                         .foregroundColor(.white)
                         .cornerRadius(8)
                 }
-                
+
                 Button(action: {
                     ringSessionManager.stopRealTimeStreaming(type: .spo2)
                 }) {
@@ -217,13 +216,10 @@ struct ContentView: View {
                         .cornerRadius(8)
                 }
             })
-            
-            
         }
         .listStyle(.insetGrouped)
-        
     }
-    
+
     @ViewBuilder
     private func makeRingView(ring: ASAccessory) -> some View {
         HStack {
@@ -231,7 +227,7 @@ struct ContentView: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(height: 70)
-            
+
             VStack(alignment: .leading) {
                 Text(ring.displayName)
                     .font(Font.headline.weight(.semibold))

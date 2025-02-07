@@ -32,7 +32,7 @@ func makePacket(command: UInt8, subData: [UInt8]? = nil) throws -> [UInt8] {
     packet[0] = command
 
     // Validate and copy subData into the packet if provided
-    if let subData = subData {
+    if let subData {
         guard subData.count <= 14 else {
             throw PacketError.invalidSubDataLength
         }
@@ -56,7 +56,7 @@ func makePacket(command: UInt8, subData: [UInt8]? = nil) throws -> [UInt8] {
 /// - Returns: The calculated checksum byte
 func checksum(packet: [UInt8]) -> UInt8 {
     // Use `UInt` to safely handle summation without overflow
-    let sum = packet.reduce(0) { (result, byte) in
+    let sum = packet.reduce(0) { result, byte in
         result + UInt(byte)
     }
     return UInt8(sum % 255)
