@@ -7,10 +7,18 @@
 
 import Foundation
 
-// Constants
-let CMD_READ_HEART_RATE: UInt8 = 21 // 0x15
+/// Command constants for heart rate related operations
+/// Each command represents a specific operation that can be performed with the ring device
 
-//let CMD_X: UInt8 = 30
+/// Command to read historical heart rate data (0x15)
+let CMD_READ_HEART_RATE: UInt8 = 21
+
+/// Command mapping for different sensor operations:
+/// - 21: Read heart rate history
+/// - 22: Toggle heart rate detection (1=ON, 2=OFF)
+/// - 43: Toggle SPO2 detection (1=ON, 2=OFF)
+/// - 55: Toggle HRV detection (1=ON, 2=OFF)
+/// - 53: Toggle stress detection (1=ON, 2=OFF)
 /*
  Received value: 16 bytes : [3, 62, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65]
  
@@ -108,18 +116,36 @@ Received value: 16 bytes : [72, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 72]
 
 
 
+/// Manages command cycling for testing different sensor modes
+/// This class helps in debugging and testing different sensor commands
+/// by providing a way to increment through various command values
 class Counter {
+    /// Singleton instance for global access
     static let shared = Counter()
+    
+    /// Current command value, starting with SPO2 detection (43)
     var CMD_X: UInt8 = 43
     
+    /// Increments the command value to test different sensor modes
     func increment() {
         CMD_X += 1
     }
 }
-let counter  = Counter()
-// Helper Functions
+
+/// Global counter instance for convenience
+let counter = Counter()
+// MARK: - Packet Creation Helper Functions
+
+/// Creates a packet to request heart rate data for a specific date
+/// 
+/// This function creates a properly formatted packet to request historical heart rate data
+/// from the ring device. The target date is converted to a Unix timestamp and included
+/// in the packet's data section.
+///
+/// - Parameter target: The date for which to request heart rate data (should be midnight)
+/// - Returns: A formatted packet ready to send to the device
+/// - Throws: PacketError if packet creation fails
 func readHeartRatePacket(for target: Date) throws -> [UInt8] {
-    // Target datetime should be at midnight for the day of interest
     let timestamp = Int(target.timeIntervalSince1970)
     let data = withUnsafeBytes(of: UInt32(timestamp).littleEndian) { Array($0) }
     return try makePacket(command: CMD_READ_HEART_RATE, subData: data)
@@ -146,18 +172,38 @@ func addTimes(heartRates: [Int], timestamp: Date) throws -> [(Int, Date)] {
     return result
 }
 
-// HeartRateLog Struct
+/// Represents a complete log of heart rate measurements for a specific time period
+///
+/// The HeartRateLog contains an array of heart rate measurements taken at regular
+/// intervals (typically every 5 minutes) throughout a day, along with metadata
+/// about the measurements such as timestamp and sampling interval.
 struct HeartRateLog {
+    /// Array of heart rate values (typically 288 values for a full day)
     var heartRates: [Int]
+    
+    /// Raw packet data for debugging purposes
     var allPackets: [UInt8] = []
+    
+    /// Start timestamp for the heart rate measurements
     var timestamp: Date
+    
+    /// Number of hours of data contained in the log
     var size: Int
+    
+    /// Current processing index
     var index: Int
+    
+    /// Sampling interval in minutes (typically 5)
     var range: Int
     
+    /// Returns an array of tuples containing heart rate values and their corresponding timestamps
+    /// Filters out zero values which indicate invalid or missing readings
+    ///
+    /// - Returns: Array of (heartRate, timestamp) tuples
+    /// - Throws: HeartRateError if the data format is invalid
     func heartRatesWithTimes() throws -> [(Int, Date)] {
         return try addTimes(heartRates: heartRates, timestamp: timestamp)
-            .filter { $0.0 != 0 } // Filter out zeros (invalid / zero readings)
+            .filter { $0.0 != 0 }
     }
 }
 

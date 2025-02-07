@@ -7,6 +7,20 @@
 
 import Foundation
 
+/// Creates a properly formatted packet for communication with the ring device
+///
+/// Packet Format:
+/// - Byte 0: Command byte (0-255)
+/// - Bytes 1-14: Optional sub-data (up to 14 bytes)
+/// - Byte 15: Checksum byte
+///
+/// The checksum is calculated as the sum of all other bytes modulo 255
+///
+/// - Parameters:
+///   - command: The command byte to send (0-255)
+///   - subData: Optional additional data bytes (max 14 bytes)
+/// - Returns: A complete 16-byte packet with checksum
+/// - Throws: PacketError if command or subData are invalid
 func makePacket(command: UInt8, subData: [UInt8]? = nil) throws -> [UInt8] {
     // Ensure the command is between 0 and 255
     guard command <= 255 else {
@@ -33,6 +47,13 @@ func makePacket(command: UInt8, subData: [UInt8]? = nil) throws -> [UInt8] {
     return packet
 }
 
+/// Calculates the checksum for a packet
+///
+/// The checksum is calculated by summing all bytes in the packet (excluding the checksum byte)
+/// and taking the modulo 255 of the result. This provides a simple error detection mechanism.
+///
+/// - Parameter packet: The packet bytes to calculate checksum for (should be 16 bytes)
+/// - Returns: The calculated checksum byte
 func checksum(packet: [UInt8]) -> UInt8 {
     // Use `UInt` to safely handle summation without overflow
     let sum = packet.reduce(0) { (result, byte) in

@@ -10,32 +10,76 @@ import AccessorySetupKit
 import CoreBluetooth
 import SwiftUI
 
+/// Manages Bluetooth communication with the ring device
+///
+/// This class handles all aspects of connecting to and communicating with the ring:
+/// - Device discovery and pairing
+/// - Bluetooth connection management
+/// - Command transmission and response handling
+/// - Real-time data streaming
+/// - Historical data retrieval
 @Observable
 class RingSessionManager: NSObject {
+    /// Indicates if a Bluetooth connection is currently established
     var peripheralConnected = false
+    
+    /// Tracks the state of the accessory picker UI
     var pickerDismissed = true
     
+    /// Currently connected ring accessory
     var currentRing: ASAccessory?
+    
+    /// Session manager for accessory setup and pairing
     private var session = ASAccessorySession()
+    
+    /// Bluetooth central manager for scanning and connecting
     private var manager: CBCentralManager?
+    
+    /// Connected Bluetooth peripheral (ring device)
     private var peripheral: CBPeripheral?
     
+    /// Characteristic for sending commands to the ring
     private var uartRxCharacteristic: CBCharacteristic?
+    
+    /// Characteristic for receiving data from the ring
     private var uartTxCharacteristic: CBCharacteristic?
     
+    /// UUID for the ring's main UART service
     private static let ringServiceUUID = "6E40FFF0-B5A3-F393-E0A9-E50E24DCCA9E"
+    
+    /// UUID for sending commands to the ring (write characteristic)
     private static let uartRxCharacteristicUUID = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
+    
+    /// UUID for receiving data from the ring (notify characteristic)
     private static let uartTxCharacteristicUUID = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
     
+    /// UUID for the standard Bluetooth device information service
     private static let deviceInfoServiceUUID = "0000180A-0000-1000-8000-00805F9B34FB"
+    
+    /// UUID for hardware revision characteristic
     private static let deviceHardwareUUID = "00002A27-0000-1000-8000-00805F9B34FB"
+    
+    /// UUID for firmware revision characteristic
     private static let deviceFirmwareUUID = "00002A26-0000-1000-8000-00805F9B34FB"
     
-    private static let CMD_BLINK_TWICE: UInt8 = 16 // 0x10
-    private static let CMD_BATTERY: UInt8 = 3
-    private static let CMD_READ_HEART_RATE: UInt8 = 21  // 0x15
+    /// Command to make the ring's LED blink twice (0x10)
+    /// Used for testing connectivity
+    private static let CMD_BLINK_TWICE: UInt8 = 16
     
+    /// Command to request battery status (0x03)
+    /// Returns battery level and charging state
+    private static let CMD_BATTERY: UInt8 = 3
+    
+    /// Command to read historical heart rate data (0x15)
+    /// Returns heart rate measurements for a specified time period
+    private static let CMD_READ_HEART_RATE: UInt8 = 21
+    
+    /// Command to start real-time sensor readings (0x69)
+    /// Used to begin continuous streaming of sensor data
     private static let CMD_START_REAL_TIME: UInt8 = 105
+    
+    /// Command to stop real-time sensor readings (0x6A)
+    /// Used to end continuous streaming of sensor data
     private static let CMD_STOP_REAL_TIME: UInt8 = 106
     
     private let hrp = HeartRateLogParser()
@@ -294,22 +338,66 @@ extension RingSessionManager {
 
 // MARK: - RealTime Streaming
 
+/// Extension handling real-time sensor data streaming from the ring
+/// Supports multiple sensor types (heart rate, SPO2, etc.) with continuous data updates
 extension RingSessionManager {
-    //    CMD_REAL_TIME_HEART_RATE = 30
-    //    CONTINUE_HEART_RATE_PACKET = make_packet(CMD_REAL_TIME_HEART_RATE, bytearray(b"3"))
-    
+    /// Initiates real-time streaming for a specific sensor type
+    ///
+    /// The ring device will begin sending continuous updates for the requested sensor.
+    /// Data packets will be received through the characteristic update delegate method.
+    ///
+    /// Packet Format:
+    /// - Byte 0: CMD_START_REAL_TIME (105)
+    /// - Byte 1: Sensor type (heart rate, SPO2, etc.)
+    /// - Byte 2: Action (1 = start)
+    /// - Byte 3-15: Reserved
+    ///
+    /// Response Format:
+    /// - Byte 0: CMD_START_REAL_TIME (105)
+    /// - Byte 1: Sensor type
+    /// - Byte 2: Error code (0 = success)
+    /// - Byte 3: Current sensor value
+    /// - Byte 4-15: Reserved
+    ///
+    /// - Parameter type: The type of sensor reading to stream (heart rate, SPO2, etc.)
     func startRealTimeStreaming(type: RealTimeReading) {
         sendRealTimeCommand(command: RingSessionManager.CMD_START_REAL_TIME, type: type, action: .start)
     }
     
+    /// Continues an active real-time streaming session
+    ///
+    /// Sends a continuation packet to maintain the streaming connection.
+    /// This prevents the ring from timing out the streaming session.
+    ///
+    /// - Parameter type: The type of sensor currently being streamed
     func continueRealTimeStreaming(type: RealTimeReading) {
         sendRealTimeCommand(command: RingSessionManager.CMD_START_REAL_TIME, type: type, action: .continue)
     }
     
+    /// Stops real-time streaming for a specific sensor type
+    ///
+    /// Sends a command to the ring to stop sending continuous updates.
+    /// This frees up the connection for other commands.
+    ///
+    /// Packet Format:
+    /// - Byte 0: CMD_STOP_REAL_TIME (106)
+    /// - Byte 1: Sensor type
+    /// - Byte 2-15: Reserved
+    ///
+    /// - Parameter type: The type of sensor to stop streaming
     func stopRealTimeStreaming(type: RealTimeReading) {
         sendRealTimeCommand(command: RingSessionManager.CMD_STOP_REAL_TIME, type: type, action: nil)
     }
     
+    /// Sends a real-time command packet to the ring device
+    ///
+    /// This internal method handles the creation and transmission of real-time
+    /// command packets for starting, continuing, or stopping sensor streams.
+    ///
+    /// - Parameters:
+    ///   - command: The command type (start=105 or stop=106)
+    ///   - type: The sensor type to control
+    ///   - action: Optional action parameter (start=1, continue=3, or nil for stop)
     private func sendRealTimeCommand(command: UInt8, type: RealTimeReading, action: Action?) {
         guard let uartRxCharacteristic, let peripheral else {
             print("Cannot send real-time command. Peripheral or characteristic not ready.")
