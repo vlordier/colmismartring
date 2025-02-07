@@ -16,8 +16,7 @@ import Foundation
 /// - Parameter date: The date to get the start of day for
 /// - Returns: Date object set to midnight (00:00:00) of the given date, or nil if calculation fails
 func startOfDay(for date: Date) -> Date? {
-    let calendar = Calendar.current
-    return calendar.startOfDay(for: date)
+    return Calendar.current.startOfDay(for: date)
 }
 
 /// Returns the end of the day (23:59:59) for a given date
@@ -29,8 +28,7 @@ func startOfDay(for date: Date) -> Date? {
 /// - Returns: Date object set to the last second (23:59:59) of the given date, or nil if calculation fails
 func endOfDay(for date: Date) -> Date? {
     guard let start = startOfDay(for: date) else { return nil }
-    let calendar = Calendar.current
-    return calendar.date(byAdding: DateComponents(day: 1, second: -1), to: start)
+    return Calendar.current.date(byAdding: DateComponents(day: 1, second: -1), to: start)
 }
 
 /// Returns an array of dates between two dates (inclusive)
@@ -45,12 +43,14 @@ func endOfDay(for date: Date) -> Date? {
 /// - Throws: NSError if start date is after end date
 func datesBetween(start: Date, end: Date) throws -> [Date] {
     guard start <= end else {
-        throw NSError(domain: "InvalidRange", code: 1, userInfo: [NSLocalizedDescriptionKey: "Start date is after end date"])
+        throw HaloError.invalidDateRange
     }
 
     var dates: [Date] = []
     let calendar = Calendar.current
-    var current = startOfDay(for: start)!
+    guard var current = startOfDay(for: start) else {
+        throw HaloError.invalidDateRange
+    }
 
     while current <= end {
         dates.append(current)
@@ -80,7 +80,6 @@ func now() -> Date {
 /// - Returns: Number of minutes since midnight plus 1 (to match legacy behavior),
 ///           or nil if start of day cannot be calculated
 func minutesSoFar(on date: Date) -> Int? {
-    let calendar = Calendar.current
     guard let startOfDay = startOfDay(for: date) else { return nil }
     let elapsed = date.timeIntervalSince(startOfDay)
     return Int(elapsed / 60) + 1 // Adding 1 to match the Python behavior
@@ -94,6 +93,5 @@ func minutesSoFar(on date: Date) -> Int? {
 /// - Parameter date: The date to check
 /// - Returns: true if the date is today, false otherwise
 func isToday(date: Date) -> Bool {
-    let calendar = Calendar.current
-    return calendar.isDateInToday(date)
+    return Calendar.current.isDateInToday(date)
 }

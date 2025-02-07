@@ -6,15 +6,16 @@
 //
 
 import SwiftUI
+import HealthKit
 
 @main
 struct HaloApp: App {
-    @State private var healthKitService = HealthKitService()
+    @StateObject private var healthKitService = HealthKitService()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(healthKitService)
+                .environmentObject(healthKitService)
                 .task {
                     await requestHealthKitAuthorization()
                 }
@@ -22,9 +23,9 @@ struct HaloApp: App {
     }
 
     private func requestHealthKitAuthorization() async {
-        await withCheckedContinuation { continuation in
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             healthKitService.requestAuthorization { success in
-                print("HealthKit auth \(success ? "granted" : "denied")")
+                print("HealthKit auth", success != false ? "granted" : "denied")
                 continuation.resume()
             }
         }

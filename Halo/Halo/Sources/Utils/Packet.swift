@@ -55,8 +55,9 @@ func makePacket(command: UInt8, subData: [UInt8]? = nil) throws -> [UInt8] {
 /// - Parameter packet: The packet bytes to calculate checksum for (should be 16 bytes)
 /// - Returns: The calculated checksum byte
 func checksum(packet: [UInt8]) -> UInt8 {
-    // Use `UInt` to safely handle summation without overflow
-    let sum = packet.reduce(0) { result, byte in
+    // Only sum the first 15 bytes (excluding checksum byte)
+    let relevantBytes = packet[0..<15]
+    let sum = relevantBytes.reduce(0) { result, byte in
         result + UInt(byte)
     }
     return UInt8(sum % 255)

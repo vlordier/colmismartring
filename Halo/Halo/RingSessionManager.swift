@@ -18,8 +18,7 @@ import SwiftUI
 /// - Command transmission and response handling
 /// - Real-time data streaming
 /// - Historical data retrieval
-@Observable
-class RingSessionManager: NSObject {
+@Observable class RingSessionManager: NSObject {
     /// Indicates if a Bluetooth connection is currently established
     var peripheralConnected = false
 
@@ -89,8 +88,12 @@ class RingSessionManager: NSObject {
     private let sportParser = SportDetailParser()
     private let healthKitService = HealthKitService()
 
-    @AppStorage("lastConnectedDevice") private var lastDeviceID: String?
-    @AppStorage("lastSyncDate") private var lastSyncDate: Date?
+    private(set) var lastDeviceID: String? {
+        willSet { UserDefaults.standard.set(newValue, forKey: "lastConnectedDevice") }
+    }
+    private(set) var lastSyncDate: Date? {
+        willSet { UserDefaults.standard.set(newValue, forKey: "lastSyncDate") }
+    }
 
     private static let ring: ASPickerDisplayItem = {
         let descriptor = ASDiscoveryDescriptor()
@@ -110,6 +113,8 @@ class RingSessionManager: NSObject {
     var stepLogCallback: ((StepLog) -> Void)?
 
     override init() {
+        self.lastDeviceID = UserDefaults.standard.string(forKey: "lastConnectedDevice")
+        self.lastSyncDate = UserDefaults.standard.object(forKey: "lastSyncDate") as? Date
         super.init()
         session.activate(on: DispatchQueue.main, eventHandler: handleSessionEvent(event:))
     }
@@ -210,7 +215,7 @@ extension RingSessionManager {
     }
 
     private func makeStepPacket(dayOffset: Int) throws -> [UInt8] {
-        var subData: [UInt8] = [UInt8(dayOffset), 0x0F, 0x00, 0x5F, 0x01]
+        let subData: [UInt8] = [UInt8(dayOffset), 0x0F, 0x00, 0x5F, 0x01]
         return try makePacket(command: Self.CMD_GET_STEP_SOMEDAY, subData: subData)
     }
 
@@ -233,7 +238,7 @@ extension RingSessionManager {
             stepLogCallback?(StepLog.empty)
             stepLogCallback = nil
 
-        case .partial, .none:
+        case .partial:
             break // Still receiving data
         }
     }
@@ -366,10 +371,14 @@ extension RingSessionManager: CBPeripheralDelegate {
             let readingType = RealTimeReading(rawValue: packet[1]) ?? .heartRate
             let errorCode = packet[2]
 
-            if errorCode == 0, readingType == .heartRate {
+            if errorCode == 0 && readingType == .heartRate {
                 let bpm = Double(packet[3])
-                healthKitService.saveHeartRate(bpm, date: Date()) { success in
-                    print("HealthKit save \(success ? "succeeded" : "failed")")
+                healthKitService.saveHeartRate(bpm, date: Date()) { success, error in
+                    if let error {
+                        print("HealthKit save failed: \(error)")
+                    } else {
+                        print("HealthKit save \(success ? "succeeded" : "failed")")
+                    }
                 }
             } else {
                 print("Error in reading - Type: \(readingType), Error Code: \(errorCode)")
@@ -543,6 +552,10 @@ extension RingSessionManager {
 
 extension RingSessionManager {
     func getHeartRateLog(completion: @escaping (HeartRateLog) -> Void) {
+        // Cancel any pending request
+        heartRateLogCallback = nil
+        hrp.reset()
+        
         guard let uartRxCharacteristic, let peripheral else {
             print("Cannot send heart rate log request. Peripheral or characteristic not ready.")
             return
@@ -553,10 +566,6 @@ extension RingSessionManager {
                 return
             }
             let target = today.convertToTimeZone(initTimeZone: .gmt, timeZone: .current)
-
-            guard let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: target) else {
-                return
-            }
 
             let packet = try readXPacket(for: target)
             let data = Data(packet)

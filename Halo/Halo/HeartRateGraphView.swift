@@ -39,12 +39,12 @@ struct HeartRateGraphView: View {
                             x: .value("Time", point.time),
                             y: .value("Heart Rate", point.heartRate)
                         )
-                        .interpolationMethod(.catmullRom)
+                        .interpolationMethod(.monotone)
                         .foregroundStyle(ViewConstants.Colors.primary)
                     }
                 }
                 .chartYAxis {
-                    AxisMarks(position: .leading) { value in
+                    AxisMarks(position: .leading, values: .automatic(desiredCount: 6)) { value in
                         if let heartRate = value.as(Int.self) {
                             AxisValueLabel {
                                 Text("\(heartRate) bpm")
@@ -54,7 +54,7 @@ struct HeartRateGraphView: View {
                     }
                 }
                 .chartXAxis {
-                    AxisMarks(values: .stride(by: .hour)) { value in
+                    AxisMarks(values: .stride(by: 900)) { value in
                         if let date = value.as(Date.self) {
                             AxisValueLabel {
                                 Text(dateFormatter.string(from: date))

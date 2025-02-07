@@ -124,7 +124,7 @@ class Counter {
 
     /// Increments the command value to test different sensor modes
     func increment() {
-        CMD_X += 1
+        CMD_X = CMD_X < 255 ? CMD_X + 1 : 0  // Wrap around to prevent overflow
     }
 }
 
@@ -157,7 +157,7 @@ func readXPacket(for target: Date) throws -> [UInt8] {
 
 func addTimes(heartRates: [Int], timestamp: Date) throws -> [(Int, Date)] {
     guard heartRates.count == 288 else {
-        throw HeartRateError.invalidHeartRateCount
+        throw HaloError.invalidDataFormat("Heart rate count must be 288, got \(heartRates.count)")
     }
     var result: [(Int, Date)] = []
     var current = Calendar.current.startOfDay(for: timestamp)
@@ -336,9 +336,6 @@ class HeartRateLogParser {
 }
 
 // Custom Errors
-enum HeartRateError: Error {
-    case invalidHeartRateCount
-}
 
 func extractTimestamp(from packet: [UInt8]) -> UInt32 {
     let timestamp = UInt32(packet[2]) |

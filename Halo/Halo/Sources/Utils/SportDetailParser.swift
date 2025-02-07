@@ -1,3 +1,9 @@
+import Foundation
+
+private func bcdToDecimal(_ bcd: UInt8) -> Int {
+    ((Int(bcd) >> 4) * 10) + (Int(bcd) & 0x0F)
+}
+
 class SportDetailParser {
     enum ParseResult {
         case complete([SportDetail])
@@ -18,7 +24,18 @@ class SportDetailParser {
     }
 
     func parse(packet: [UInt8]) -> ParseResult {
-        guard packet.count == 16 else { return .noData }
+        guard packet.count == 16,
+              packet.indices.contains(12),
+              packet.indices.contains(6),
+              packet[6] > 0,
+              packet[6] <= 255 else {
+            return .noData
+        }
+        
+        guard Int(packet[5]) == currentIndex else {
+            reset()
+            return .noData
+        }
 
         // Handle initial packet
         if currentIndex == 0 {

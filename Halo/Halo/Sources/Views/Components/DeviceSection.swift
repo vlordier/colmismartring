@@ -1,4 +1,5 @@
 import AccessorySetupKit
+import CoreBluetooth
 import SwiftUI
 
 struct DeviceSection: View {
@@ -6,12 +7,31 @@ struct DeviceSection: View {
 
     var body: some View {
         Section {
-            if viewModel.ringSessionManager.pickerDismissed,
-               let currentRing = viewModel.ringSessionManager.currentRing {
+            if let currentRing = viewModel.ringSessionManager.currentRing {
                 makeRingView(ring: currentRing)
+            } else if viewModel.isScanning {
+                VStack {
+                    ProgressView("Scanning for rings...")
+                    
+                    ForEach(viewModel.discoveredRings) { ring in
+                        Button(action: {
+                            viewModel.connect(to: viewModel.ringSessionManager.currentRing ?? ASAccessory())
+                        }) {
+                            HStack {
+                                Text(ring.name)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                            }
+                        }
+                    }
+                    
+                    Button("Cancel") {
+                        viewModel.stopScanning()
+                    }
+                }
             } else {
                 Button {
-                    viewModel.ringSessionManager.presentPicker()
+                    viewModel.startScanning()
                 } label: {
                     Text("Add Ring")
                         .frame(maxWidth: .infinity)

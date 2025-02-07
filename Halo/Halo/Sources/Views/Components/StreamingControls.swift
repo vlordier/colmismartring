@@ -8,19 +8,19 @@ struct StreamingControls: View {
         Section {
             VStack(spacing: ViewConstants.Spacing.medium) {
                 Button(action: {
-                    viewModel.ringSessionManager.startRealTimeStreaming(type: type)
+                    viewModel.ringSessionManager.startRealTimeStreaming(type: type.realTimeReading)
                 }) {
                     ActionButton(title: "Start \(type.rawValue) Streaming", color: ViewConstants.Colors.success)
                 }
 
                 Button(action: {
-                    viewModel.ringSessionManager.continueRealTimeStreaming(type: type)
+                    viewModel.ringSessionManager.continueRealTimeStreaming(type: type.realTimeReading)
                 }) {
                     ActionButton(title: "Continue \(type.rawValue) Streaming", color: ViewConstants.Colors.warning)
                 }
 
                 Button(action: {
-                    viewModel.ringSessionManager.stopRealTimeStreaming(type: type)
+                    viewModel.ringSessionManager.stopRealTimeStreaming(type: type.realTimeReading)
                 }) {
                     ActionButton(title: "Stop \(type.rawValue) Streaming", color: ViewConstants.Colors.error)
                 }
@@ -42,6 +42,15 @@ enum StreamingType: String {
             "heart.fill"
         case .spo2:
             "lungs.fill"
+        }
+    }
+    
+    var realTimeReading: RealTimeReading {
+        switch self {
+        case .heartRate:
+            return .heartRate
+        case .spo2:
+            return .spo2
         }
     }
 }

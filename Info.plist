@@ -1,8 +1,19 @@
-    <key>NSHealthUpdateUsageDescription</key>
-    <string>We need to store your heart rate data in HealthKit</string>
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>healthkit</string>
+    </array>
     <key>NSHealthShareUsageDescription</key>
-    <string>We need to read your heart rate data from HealthKit</string>
+    <string>Halo needs access to read your heart rate data to display your health trends and patterns</string>
+    <key>NSHealthUpdateUsageDescription</key>
+    <string>Halo needs access to save heart rate measurements from your ring to track your health over time</string>
     <key>NSBluetoothAlwaysUsageDescription</key>
-    <string>We need Bluetooth access to connect to your ring</string>
+    <string>Bluetooth is required to connect and communicate with your Halo ring</string>
     <key>NSBluetoothPeripheralUsageDescription</key>
-    <string>We need Bluetooth access to maintain connection with your ring</string>
+    <string>Bluetooth is required to maintain connection with your Halo ring and receive health data</string>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+        <string>UIInterfaceOrientationPortraitUpsideDown</string>
+    </array>
