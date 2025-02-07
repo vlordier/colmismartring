@@ -9,6 +9,7 @@ import Foundation
 protocol BluetoothServiceDelegate: AnyObject {
     func bluetoothService(_ service: BluetoothService, didReceivePacket packet: [UInt8])
     func bluetoothService(_ service: BluetoothService, didChangeConnectionState connected: Bool)
+    func bluetoothService(_ service: BluetoothService, didReceiveError error: Error)
 }
 
 final class BluetoothService: NSObject {
@@ -66,7 +67,17 @@ extension BluetoothService: CBCentralManagerDelegate {
     }
 
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
+        self.peripheral = nil
+        self.uartRxCharacteristic = nil
+        self.uartTxCharacteristic = nil
         delegate?.bluetoothService(self, didChangeConnectionState: false)
+        if let error {
+            delegate?.bluetoothService(self, didReceiveError: error)
+        }
+    }
+    
+    func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
+        delegate?.bluetoothService(self, didReceiveError: error ?? NSError(domain: "BluetoothService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to connect"]))
     }
 }
 

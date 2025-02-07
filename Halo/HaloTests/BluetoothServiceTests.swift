@@ -1,65 +1,83 @@
-//
-//  BluetoothServiceTests.swift
-//  HaloTests
-//
-
 import XCTest
 import CoreBluetooth
 @testable import Halo
 
-final class BluetoothServiceTests: XCTestCase {
-    var sut: BluetoothService!
-    var mockDelegate: MockBluetoothServiceDelegate!
+class BluetoothServiceTests: XCTestCase {
+    var service: BluetoothService!
+    var mockCentral: MockCBCentralManager!
+    var mockPeripheral: MockCBPeripheral!
     
+    class TestDelegate: BluetoothServiceDelegate {
+        var lastError: Error?
+        var lastPacket: [UInt8]?
+        var connectionState: Bool?
+        
+        func bluetoothService(_ service: BluetoothService, didReceivePacket packet: [UInt8]) {
+            lastPacket = packet
+        }
+        
+        func bluetoothService(_ service: BluetoothService, didChangeConnectionState connected: Bool) {
+            connectionState = connected
+        }
+        
+        func bluetoothService(_ service: BluetoothService, didReceiveError error: Error) {
+            lastError = error
+        }
+    }
+
     override func setUp() {
         super.setUp()
-        sut = BluetoothService()
-        mockDelegate = MockBluetoothServiceDelegate()
-        sut.delegate = mockDelegate
+        service = BluetoothService()
+        mockCentral = MockCBCentralManager()
+        service.manager = mockCentral
+        mockPeripheral = MockCBPeripheral()
+        service.peripheral = mockPeripheral
     }
-    
-    override func tearDown() {
-        sut = nil
-        mockDelegate = nil
-        super.tearDown()
-    }
-    
-    func testInitialization() {
-        XCTAssertNotNil(sut, "BluetoothService should be initialized")
-    }
-    
-    func testConnectionStateChange() {
-        // Given
-        let peripheral = MockCBPeripheral()
+
+    func testConnectionStatePropagation() {
+        let delegate = TestDelegate()
+        service.delegate = delegate
         
-        // When
-        sut.connect(to: peripheral)
+        // Simulate connection
+        service.manager(service.manager!, didConnect: mockPeripheral)
+        XCTAssertTrue(delegate.connectionState ?? false)
         
-        // Then
-        XCTAssertTrue(mockDelegate.connectionStateChanged)
-        XCTAssertTrue(mockDelegate.isConnected)
+        // Simulate disconnection
+        service.manager(service.manager!, didDisconnectPeripheral: mockPeripheral, error: nil)
+        XCTAssertFalse(delegate.connectionState ?? true)
+    }
+
+    func testPacketHandling() {
+        let delegate = TestDelegate()
+        service.delegate = delegate
+        let testData = Data([0x01, 0x02, 0x03])
+        
+        // Simulate receiving data
+        service.peripheral(mockPeripheral, didUpdateValueFor: CBCharacteristic(), error: nil)
+        XCTAssertEqual(delegate.lastPacket ?? [], [UInt8](testData))
     }
 }
 
-// MARK: - Mocks
-
-private class MockBluetoothServiceDelegate: BluetoothServiceDelegate {
-    var receivedPackets: [[UInt8]] = []
-    var connectionStateChanged = false
-    var isConnected = false
-    
-    func bluetoothService(_ service: BluetoothService, didReceivePacket packet: [UInt8]) {
-        receivedPackets.append(packet)
+// MARK: - Bluetooth Mocks
+class MockCBCentralManager: CBCentralManager {
+    override init() {
+        super.init(delegate: nil, queue: nil, options: nil)
     }
     
-    func bluetoothService(_ service: BluetoothService, didChangeConnectionState connected: Bool) {
-        connectionStateChanged = true
-        isConnected = connected
+    override func connect(_ peripheral: CBPeripheral, options: [String : Any]? = nil) {
+        (peripheral as? MockCBPeripheral)?.state = .connected
     }
 }
 
-private class MockCBPeripheral: CBPeripheral {
+class MockCBPeripheral: CBPeripheral {
     override var state: CBPeripheralState {
-        return .connected
+        get { return _state }
+        set { _state = newValue }
+    }
+    private var _state: CBPeripheralState = .disconnected
+    
+    override func readValue(for characteristic: CBCharacteristic) {
+        let data = Data([0x01, 0x02, 0x03])
+        delegate?.peripheral?(self, didUpdateValueFor: characteristic, error: nil)
     }
 }
