@@ -68,14 +68,14 @@ extension BluetoothService: CBCentralManagerDelegate {
 
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         self.peripheral = nil
-        self.uartRxCharacteristic = nil
-        self.uartTxCharacteristic = nil
+        uartRxCharacteristic = nil
+        uartTxCharacteristic = nil
         delegate?.bluetoothService(self, didChangeConnectionState: false)
         if let error {
             delegate?.bluetoothService(self, didReceiveError: error)
         }
     }
-    
+
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
         delegate?.bluetoothService(self, didReceiveError: error ?? NSError(domain: "BluetoothService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to connect"]))
     }

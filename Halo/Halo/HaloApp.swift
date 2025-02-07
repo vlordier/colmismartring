@@ -10,7 +10,7 @@ import SwiftUI
 @main
 struct HaloApp: App {
     @State private var healthKitService = HealthKitService()
-    
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -20,7 +20,7 @@ struct HaloApp: App {
                 }
         }
     }
-    
+
     private func requestHealthKitAuthorization() async {
         await withCheckedContinuation { continuation in
             healthKitService.requestAuthorization { success in

@@ -81,14 +81,14 @@ class RingSessionManager: NSObject {
     /// Command to stop real-time sensor readings (0x6A)
     /// Used to end continuous streaming of sensor data
     private static let CMD_STOP_REAL_TIME: UInt8 = 106
-    
+
     /// Command to get step count data for a specific day (0x43)
     private static let CMD_GET_STEP_SOMEDAY: UInt8 = 67
 
     private let hrp = HeartRateLogParser()
     private let sportParser = SportDetailParser()
     private let healthKitService = HealthKitService()
-    
+
     @AppStorage("lastConnectedDevice") private var lastDeviceID: String?
     @AppStorage("lastSyncDate") private var lastSyncDate: Date?
 
@@ -189,6 +189,7 @@ class RingSessionManager: NSObject {
 }
 
 // MARK: - Step Tracking
+
 extension RingSessionManager {
     func getStepLog(dayOffset: Int = 0, completion: @escaping (StepLog) -> Void) {
         guard let uartRxCharacteristic, let peripheral else {
@@ -200,38 +201,38 @@ extension RingSessionManager {
             let packet = try makeStepPacket(dayOffset: dayOffset)
             let data = Data(packet)
             peripheral.writeValue(data, for: uartRxCharacteristic, type: .withResponse)
-            
+
             stepLogCallback = completion
             sportParser.reset()
         } catch {
             print("Failed to create step packet: \(error)")
         }
     }
-    
+
     private func makeStepPacket(dayOffset: Int) throws -> [UInt8] {
         var subData: [UInt8] = [UInt8(dayOffset), 0x0F, 0x00, 0x5F, 0x01]
         return try makePacket(command: Self.CMD_GET_STEP_SOMEDAY, subData: subData)
     }
-    
+
     private func handleStepResponse(packet: [UInt8]) {
         guard packet[0] == Self.CMD_GET_STEP_SOMEDAY else { return }
-        
+
         let result = sportParser.parse(packet: packet)
-        
+
         switch result {
-        case .complete(let details):
+        case let .complete(details):
             let log = StepLog(
-                date: Date(), 
+                date: Date(),
                 details: details,
                 totalSteps: details.reduce(0) { $0 + $1.steps }
             )
             stepLogCallback?(log)
             stepLogCallback = nil
-            
+
         case .noData:
             stepLogCallback?(StepLog.empty)
             stepLogCallback = nil
-            
+
         case .partial, .none:
             break // Still receiving data
         }
@@ -365,7 +366,7 @@ extension RingSessionManager: CBPeripheralDelegate {
             let readingType = RealTimeReading(rawValue: packet[1]) ?? .heartRate
             let errorCode = packet[2]
 
-            if errorCode == 0 && readingType == .heartRate {
+            if errorCode == 0, readingType == .heartRate {
                 let bpm = Double(packet[3])
                 healthKitService.saveHeartRate(bpm, date: Date()) { success in
                     print("HealthKit save \(success ? "succeeded" : "failed")")
