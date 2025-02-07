@@ -1,9 +1,9 @@
 disabled_rules:
-  - trailing_whitespace
   - line_length
   - function_body_length
   - file_length
   - type_body_length
+  - trailing_comma
 
 opt_in_rules:
   - array_init
@@ -39,7 +39,6 @@ opt_in_rules:
 
 analyzer_rules:
   - explicit_self
-  - unused_declaration
   - unused_import
 
 excluded:

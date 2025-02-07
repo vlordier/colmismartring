@@ -210,7 +210,11 @@ extension RingSessionManager: CBCentralManagerDelegate {
         peripheralConnected = true
     }
 
-    func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: (any Error)?) {
+    func centralManager(
+        _ central: CBCentralManager,
+        didDisconnectPeripheral peripheral: CBPeripheral,
+        error: (any Error)?
+    ) {
         print("Disconnected from peripheral: \(peripheral)")
         peripheralConnected = false
         characteristicsDiscovered = false
@@ -224,7 +228,10 @@ extension RingSessionManager: CBCentralManagerDelegate {
 // MARK: - CBPeripheralDelegate
 
 extension RingSessionManager: CBPeripheralDelegate {
-    func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: (any Error)?) {
+    func peripheral(
+        _ peripheral: CBPeripheral,
+        didDiscoverServices error: (any Error)?
+    ) {
         print("DEBUG: Services discovery callback, error: \(String(describing: error))")
         guard error == nil, let services = peripheral.services else {
             print("DEBUG: No services found or error occurred")
@@ -248,9 +255,15 @@ extension RingSessionManager: CBPeripheralDelegate {
         }
     }
 
-    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+    func peripheral(
+        _ peripheral: CBPeripheral,
+        didDiscoverCharacteristicsFor service: CBService,
+        error: Error?
+    ) {
         print("DEBUG: Characteristics discovery callback, error: \(String(describing: error))")
-        guard error == nil, let characteristics = service.characteristics else {
+        guard error == nil,
+              let characteristics = service.characteristics
+        else {
             print("DEBUG: No characteristics found or error occurred")
             return
         }
