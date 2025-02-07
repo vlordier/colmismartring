@@ -16,7 +16,7 @@ import Foundation
 /// - Parameter date: The date to get the start of day for
 /// - Returns: Date object set to midnight (00:00:00) of the given date, or nil if calculation fails
 func startOfDay(for date: Date) -> Date? {
-    return Calendar.current.startOfDay(for: date)
+    Calendar.current.startOfDay(for: date)
 }
 
 /// Returns the end of the day (23:59:59) for a given date

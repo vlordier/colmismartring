@@ -39,6 +39,15 @@ enum RealTimeReading: UInt8 {
 
     /// Heart Rate Variability measurement
     case hrv = 10
+    
+    /// Accelerometer X axis
+    case accelerometerX = 11
+    
+    /// Accelerometer Y axis
+    case accelerometerY = 12
+    
+    /// Accelerometer Z axis
+    case accelerometerZ = 13
 }
 
 /// Represents the different control actions for real-time sensor readings

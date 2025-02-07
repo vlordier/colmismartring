@@ -64,7 +64,12 @@ func checksum(packet: [UInt8]) -> UInt8 {
 }
 
 // Custom errors for validation
+enum PacketCommand: UInt8 {
+    case raw = 0xA1
+}
+
 enum PacketError: Error {
     case invalidCommand
     case invalidSubDataLength
+    case invalidRawCommand
 }

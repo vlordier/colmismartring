@@ -28,11 +28,80 @@ final class RingViewModel: ObservableObject {
     
     /// Whether currently scanning for rings
     @Published var isScanning = false
+    
+    /// Current accelerometer readings
+    @Published var accelerometerData: (x: Float, y: Float, z: Float) = (0, 0, 0) {
+        didSet {
+            // Create sensor data entry when accelerometer data changes
+            let data = SensorData(
+                timestamp: Date(),
+                heartRate: nil,
+                spo2: nil,
+                accelerometer: SensorData.AccelerometerData(
+                    x: accelerometerData.x,
+                    y: accelerometerData.y,
+                    z: accelerometerData.z
+                ),
+                ppg: nil,
+                batteryLevel: batteryInfo?.batteryLevel
+            )
+            currentSensorData = data
+            
+            // Log the data if logging is enabled
+            if isLogging {
+                loggingService?.logSensorData(data)
+            }
+        }
+    }
+    
+    /// Current sensor readings
+    @Published var currentSensorData: SensorData?
+    
+    /// Service for logging sensor data
+    @Published var loggingService: LoggingService?
+    
+    /// Whether currently logging sensor data
+    @Published var isLogging = false {
+        didSet {
+            if isLogging {
+                startLogging()
+            } else {
+                stopLogging()
+            }
+        }
+    }
+    
+    /// Starts logging sensor data to a file
+    private func startLogging() {
+        guard let loggingService = loggingService else { return }
+        
+        // Create initial sensor data entry
+        let data = SensorData(
+            timestamp: Date(),
+            heartRate: nil,
+            spo2: nil,
+            accelerometer: SensorData.AccelerometerData(
+                x: accelerometerData.x,
+                y: accelerometerData.y,
+                z: accelerometerData.z
+            ),
+            ppg: nil,
+            batteryLevel: batteryInfo?.batteryLevel
+        )
+        
+        loggingService.logSensorData(data)
+    }
+    
+    /// Stops logging sensor data
+    private func stopLogging() {
+        // Clean up any logging resources if needed
+    }
 
     /// Creates a new RingViewModel instance
     /// - Parameter ringSessionManager: The session manager to use, defaults to a new instance
     init(ringSessionManager: RingSessionManager = RingSessionManager()) {
         self.ringSessionManager = ringSessionManager
+        self.loggingService = LoggingService()
     }
     
     /// Start scanning for available rings

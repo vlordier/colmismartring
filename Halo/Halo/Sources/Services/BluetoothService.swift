@@ -31,6 +31,14 @@ protocol BluetoothServiceDelegate: AnyObject {
     ///   - service: The BluetoothService instance that received the data
     ///   - data: Dictionary containing parsed sensor values
     func bluetoothService(_ service: BluetoothService, didReceiveSensorData data: [String: Int])
+    
+    /// Called when accelerometer data is received
+    /// - Parameters:
+    ///   - service: The BluetoothService instance that received the data
+    ///   - x: X-axis acceleration
+    ///   - y: Y-axis acceleration
+    ///   - z: Z-axis acceleration
+    func bluetoothService(_ service: BluetoothService, didReceiveAccelerometerData x: Float, y: Float, z: Float)
 }
 
 /// Service managing Bluetooth communication with the ring device
@@ -109,6 +117,24 @@ final class BluetoothService: NSObject {
               let peripheral else { return }
         let data = Data(packet)
         peripheral.writeValue(data, for: characteristic, type: .withResponse)
+    }
+    
+    func startRawStream() {
+        do {
+            let packet = try makePacket(command: PacketCommand.raw.rawValue, subData: [0x04, 0x04])
+            sendPacket(packet)
+        } catch {
+            delegate?.bluetoothService(self, didReceiveError: error)
+        }
+    }
+
+    func stopRawStream() {
+        do {
+            let packet = try makePacket(command: PacketCommand.raw.rawValue, subData: [0x02])
+            sendPacket(packet)
+        } catch {
+            delegate?.bluetoothService(self, didReceiveError: error)
+        }
     }
     
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
@@ -218,14 +244,65 @@ extension BluetoothService: CBPeripheralDelegate {
     }
     
     private func parseSensorData(_ data: [UInt8]) -> [String: Int] {
+        guard data.count >= 10 else { return [:] }
+        
+        if data[0] == PacketCommand.raw.rawValue {
+            let subtype = data[1]
+            var rawValues = [String: Int]()
+            
+            switch subtype {
+            case 0x01:  // Raw blood data
+                rawValues["rawBlood"] = Int(data[2]) << 8 | Int(data[3])
+                rawValues["max1"] = Int(data[5])
+                rawValues["max2"] = Int(data[7])
+                rawValues["max3"] = Int(data[9])
+                delegate?.bluetoothService(self, didReceiveSensorData: rawValues)
+                
+            case 0x02:  // HRS data
+                delegate?.bluetoothService(self, didReceiveSensorData: ["hrsData": 1])
+                
+            case 0x03:  // Accelerometer
+                let x = Int16(data[2]) << 8 | Int16(data[3])
+                let y = Int16(data[4]) << 8 | Int16(data[5])
+                let z = Int16(data[6]) << 8 | Int16(data[7])
+                delegate?.bluetoothService(self, didReceiveAccelerometerData: Float(x), y: Float(y), z: Float(z))
+                
+            default:
+                break
+            }
+            return rawValues
+        }
+
         var parsedData: [String: Int] = [
             "payload": 0, "accX": 0, "accY": 0, "accZ": 0,
             "ppg": 0, "ppg_max": 0, "ppg_min": 0, "ppg_diff": 0,
             "spO2": 0, "spO2_max": 0, "spO2_min": 0, "spO2_diff": 0
         ]
         
-        parsedData["payload"] = data.reduce(0) { ($0 << 8) | Int($1) }
+        // Handle real-time sensor data (command 0x69 = 105)
+        if data[0] == 0x69 {
+            let sensorType = data[1]
+            let errorCode = data[2]
+            
+            if errorCode == 0 {
+                switch sensorType {
+                case 11: // Accelerometer X
+                    let value = Float(twosComplement(value: Int(data[3]))) / 100.0
+                    delegate?.bluetoothService(self, didReceiveAccelerometerData: value, y: 0, z: 0)
+                case 12: // Accelerometer Y
+                    let value = Float(twosComplement(value: Int(data[3]))) / 100.0
+                    delegate?.bluetoothService(self, didReceiveAccelerometerData: 0, y: value, z: 0)
+                case 13: // Accelerometer Z
+                    let value = Float(twosComplement(value: Int(data[3]))) / 100.0
+                    delegate?.bluetoothService(self, didReceiveAccelerometerData: 0, y: 0, z: value)
+                default:
+                    break
+                }
+            }
+            return parsedData
+        }
         
+        // Handle standard sensor data packet
         guard data.count >= 10, data[0] == 0xA1 else {
             return parsedData
         }
@@ -244,11 +321,6 @@ extension BluetoothService: CBPeripheralDelegate {
             parsedData["ppg_max"] = (Int(data[4]) << 8) | Int(data[5])
             parsedData["ppg_min"] = (Int(data[6]) << 8) | Int(data[7])
             parsedData["ppg_diff"] = (Int(data[8]) << 8) | Int(data[9])
-            
-        case 0x03:  // Accelerometer data
-            parsedData["accY"] = twosComplement(value: (Int(data[2]) << 4) | (Int(data[3]) & 0xF))
-            parsedData["accZ"] = twosComplement(value: (Int(data[4]) << 4) | (Int(data[5]) & 0xF))
-            parsedData["accX"] = twosComplement(value: (Int(data[6]) << 4) | (Int(data[7]) & 0xF))
             
         default:
             break

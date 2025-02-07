@@ -34,6 +34,29 @@ struct ContentView: View {
             
             StreamingControls(viewModel: viewModel, type: .heartRate)
             StreamingControls(viewModel: viewModel, type: .spo2)
+            
+            Section("Accelerometer") {
+                StreamingControls(viewModel: viewModel, type: .accelerometerX)
+                StreamingControls(viewModel: viewModel, type: .accelerometerY)
+                StreamingControls(viewModel: viewModel, type: .accelerometerZ)
+                
+                AccelerometerView(ringManager: viewModel.ringSessionManager)
+            }
+            
+            Section("Data Logging") {
+                Toggle("Log Sensor Data", isOn: Binding(
+                    get: { viewModel.isLogging },
+                    set: { newValue in
+                        viewModel.isLogging = newValue
+                    }
+                ))
+                
+                if let loggingService = viewModel.loggingService, !loggingService.getLogFiles().isEmpty {
+                    NavigationLink("View Logs") {
+                        LogFilesView(loggingService: loggingService)
+                    }
+                }
+            }
         }
         .listStyle(.insetGrouped)
     }

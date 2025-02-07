@@ -18,7 +18,7 @@ import SwiftUI
 /// - Command transmission and response handling
 /// - Real-time data streaming
 /// - Historical data retrieval
-@Observable class RingSessionManager: NSObject {
+@Observable class RingSessionManager: NSObject, ObservableObject {
     /// Indicates if a Bluetooth connection is currently established
     var peripheralConnected = false
 

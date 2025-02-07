@@ -13,13 +13,13 @@ import Foundation
 /// Command to read historical heart rate data (0x15)
 let CMD_READ_HEART_RATE: UInt8 = 21
 
+/*
 /// Command mapping for different sensor operations:
 /// - 21: Read heart rate history
 /// - 22: Toggle heart rate detection (1=ON, 2=OFF)
 /// - 43: Toggle SPO2 detection (1=ON, 2=OFF)
 /// - 55: Toggle HRV detection (1=ON, 2=OFF)
 /// - 53: Toggle stress detection (1=ON, 2=OFF)
-/*
   Received value: 16 bytes : [3, 62, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65]
 
   Received value: 16 bytes : [7, 0, 128, 36, 9, 33, 0, 0, 0, 0, 0, 0, 0, 2, 242, 201]

@@ -35,6 +35,10 @@ struct StreamingControls: View {
 enum StreamingType: String {
     case heartRate = "Heart Rate"
     case spo2 = "SPO2"
+    case accelerometerX = "Accelerometer X"
+    case accelerometerY = "Accelerometer Y"
+    case accelerometerZ = "Accelerometer Z"
+    case raw = "Raw Data"
 
     var iconName: String {
         switch self {
@@ -42,6 +46,12 @@ enum StreamingType: String {
             "heart.fill"
         case .spo2:
             "lungs.fill"
+        case .accelerometerX:
+            "arrow.left.and.right"
+        case .accelerometerY:
+            "arrow.up.and.down"
+        case .accelerometerZ:
+            "arrow.clockwise"
         }
     }
     
@@ -51,6 +61,12 @@ enum StreamingType: String {
             return .heartRate
         case .spo2:
             return .spo2
+        case .accelerometerX:
+            return .accelerometerX
+        case .accelerometerY:
+            return .accelerometerY
+        case .accelerometerZ:
+            return .accelerometerZ
         }
     }
 }
