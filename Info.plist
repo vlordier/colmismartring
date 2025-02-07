@@ -1,0 +1,4 @@
+    <key>NSHealthUpdateUsageDescription</key>
+    <string>We need to store your heart rate data in HealthKit</string>
+    <key>NSHealthShareUsageDescription</key>
+    <string>We need to read your heart rate data from HealthKit</string>
