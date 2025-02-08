@@ -1,11 +1,16 @@
-//
-//  Packet.swift
-//  Halo
-//
-//  Created by Yannis De Cleene on 25/01/2025.
-//
-
 import Foundation
+
+/// Utilities for creating and validating data packets for ring device communication
+/// 
+/// Packet Structure:
+/// ```
+/// +------------+----------------+-----------+
+/// | Command(1) | Sub-data(0-14) | Check(1) |
+/// +------------+----------------+-----------+
+/// ```
+/// - Command: Single byte indicating packet type
+/// - Sub-data: Optional payload (up to 14 bytes)
+/// - Check: Checksum byte for error detection
 
 /// Creates a properly formatted packet for communication with the ring device
 ///
@@ -25,6 +30,16 @@ func makePacket(command: UInt8, subData: [UInt8]? = nil) throws -> [UInt8] {
     // Ensure the command is between 0 and 255
     guard command <= 255 else {
         throw PacketError.invalidCommand
+    }
+    
+    // Validate raw commands
+    if command == PacketCommand.raw.rawValue {
+        guard let subData = subData,
+              subData.count >= 2,
+              RawSubcommand(rawValue: subData[0]) != nil,
+              subData[1] == 0x04 else {
+            throw PacketError.invalidRawCommand
+        }
     }
 
     // Initialize a 16-byte packet filled with zeros
@@ -61,15 +76,4 @@ func checksum(packet: [UInt8]) -> UInt8 {
         result + UInt(byte)
     }
     return UInt8(sum % 255)
-}
-
-// Custom errors for validation
-enum PacketCommand: UInt8 {
-    case raw = 0xA1
-}
-
-enum PacketError: Error {
-    case invalidCommand
-    case invalidSubDataLength
-    case invalidRawCommand
 }

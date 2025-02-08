@@ -1,27 +1,46 @@
 import SwiftUI
 
+/// Section containing command buttons for ring device control
 struct CommandsSection: View {
     let viewModel: RingViewModel
     
     var body: some View {
         Section("Commands") {
-            Button(action: {
+            // Debug counter increment button
+            Button {
                 print("Last CMD_X: \(Counter.shared.CMD_X)")
                 Counter.shared.increment()
-            }) {
-                ActionButton(title: "Increment", color: .blue)
+            } label: {
+                Text("Increment")
+                    .frame(maxWidth: .infinity)
+                    .padding(ViewConstants.Spacing.medium)
+                    .background(.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(ViewConstants.CornerRadius.small)
             }
 
-            Button(action: {
-                viewModel.ringSessionManager.sendBlinkTwiceCommand()
-            }) {
-                ActionButton(title: "Send Blink Twice Command", color: .blue)
+            // Trigger LED blink pattern on ring
+            Button {
+                viewModel.sendBlinkTwiceCommand()
+            } label: {
+                Text("Send Blink Twice Command")
+                    .frame(maxWidth: .infinity)
+                    .padding(ViewConstants.Spacing.medium)
+                    .background(ViewConstants.Colors.primary)
+                    .foregroundColor(.white)
+                    .cornerRadius(ViewConstants.CornerRadius.small)
             }
 
-            Button(action: {
-                viewModel.ringSessionManager.sendXCommand()
-            }) {
-                ActionButton(title: "Send X Command", color: .blue)
+            // Send custom X command to ring
+            Button {
+                viewModel.sendXCommand()
+            } label: {
+                Text("Send X Command")
+                    .frame(maxWidth: .infinity)
+                    .padding(ViewConstants.Spacing.medium)
+                    .background(.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(ViewConstants.CornerRadius.small)
             }
         }
     }

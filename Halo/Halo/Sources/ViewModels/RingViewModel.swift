@@ -11,7 +11,14 @@ import SwiftUI
 /// - Heart rate data collection
 /// - Error handling
 final class RingViewModel: ObservableObject {
-    /// The session manager handling direct communication with the ring
+    enum ConnectionState {
+        case disconnected
+        case connecting
+        case connected
+        case error(Error)
+    }
+    
+    @Published private(set) var connectionState: ConnectionState = .disconnected
     @Published private(set) var ringSessionManager: RingSessionManager
     
     /// Current battery status of the ring device
@@ -20,8 +27,30 @@ final class RingViewModel: ObservableObject {
     /// Array of heart rate measurements with timestamps
     @Published var heartRateData: [HeartRateDataPoint] = []
     
+    /// Queue for retrying failed operations
+    private let retryQueue = OperationQueue()
+
+    /// Maximum number of retry attempts
+    private let maxRetryAttempts = 3
+
+    /// Current retry attempt count
+    @Published private var retryCount = 0
+
     /// Most recent error encountered during device operations
-    @Published var lastError: Error?
+    @Published var lastError: Error? {
+        didSet {
+            showError = lastError != nil
+        }
+    }
+    
+    /// Whether to show the error alert
+    @Published var showError = false
+
+    /// Whether an operation can be retried
+    var canRetry: Bool {
+        guard let error = lastError as? RetryableError else { return false }
+        return error.retryAction != nil && retryCount < maxRetryAttempts
+    }
     
     /// Available rings discovered during scanning
     @Published var discoveredRings: [DiscoveredRing] = []
@@ -30,6 +59,10 @@ final class RingViewModel: ObservableObject {
     @Published var isScanning = false
     
     /// Current accelerometer readings
+    @Published private var rawAccelX: Int = 0
+    @Published private var rawAccelY: Int = 0
+    @Published private var rawAccelZ: Int = 0
+    
     @Published var accelerometerData: (x: Float, y: Float, z: Float) = (0, 0, 0) {
         didSet {
             // Create sensor data entry when accelerometer data changes
@@ -40,10 +73,18 @@ final class RingViewModel: ObservableObject {
                 accelerometer: SensorData.AccelerometerData(
                     x: accelerometerData.x,
                     y: accelerometerData.y,
-                    z: accelerometerData.z
+                    z: accelerometerData.z,
+                    rawX: rawAccelX,
+                    rawY: rawAccelY,
+                    rawZ: rawAccelZ
                 ),
                 ppg: nil,
-                batteryLevel: batteryInfo?.batteryLevel
+                batteryLevel: batteryInfo?.batteryLevel,
+                rawBlood: nil,
+                max1: nil,
+                max2: nil,
+                max3: nil,
+                hrsData: nil
             )
             currentSensorData = data
             
@@ -61,6 +102,8 @@ final class RingViewModel: ObservableObject {
     @Published var loggingService: LoggingService?
     
     /// Whether currently logging sensor data
+    @Published var isRawStreaming = false
+    
     @Published var isLogging = false {
         didSet {
             if isLogging {
@@ -70,6 +113,8 @@ final class RingViewModel: ObservableObject {
             }
         }
     }
+    
+    @Published var sensorHistory = SensorHistory()
     
     /// Starts logging sensor data to a file
     private func startLogging() {
@@ -83,10 +128,18 @@ final class RingViewModel: ObservableObject {
             accelerometer: SensorData.AccelerometerData(
                 x: accelerometerData.x,
                 y: accelerometerData.y,
-                z: accelerometerData.z
+                z: accelerometerData.z,
+                rawX: rawAccelX,
+                rawY: rawAccelY,
+                rawZ: rawAccelZ
             ),
             ppg: nil,
-            batteryLevel: batteryInfo?.batteryLevel
+            batteryLevel: batteryInfo?.batteryLevel,
+            rawBlood: nil,
+            max1: nil,
+            max2: nil,
+            max3: nil,
+            hrsData: nil
         )
         
         loggingService.logSensorData(data)
@@ -152,6 +205,72 @@ final class RingViewModel: ObservableObject {
     /// Processes the heart rate log data and updates the view model's state
     ///
     /// - Parameter hrl: The heart rate log to process
+    func refreshCurrentData() {
+        getBatteryStatus()
+        // Refresh other real-time data
+    }
+    
+    func refreshLastFiveMinutes() {
+        // Implement 5-minute refresh
+    }
+    
+    func refreshLastHour() {
+        // Implement hourly refresh
+    }
+    
+    func refreshHistoricalData() {
+        getHeartRateLog()
+    }
+
+    /// Retries the last failed operation
+    func retryLastOperation() {
+        guard let error = lastError as? RetryableError,
+              let retryAction = error.retryAction,
+              retryCount < maxRetryAttempts else {
+            return
+        }
+        
+        retryCount += 1
+        
+        // Add delay based on retry count
+        let delay = TimeInterval(retryCount) * 2.0
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            retryAction()
+        }
+    }
+
+    /// Resets the retry count
+    private func resetRetryCount() {
+        retryCount = 0
+    }
+
+    /// Handles errors from various operations
+    private func handleError(_ error: Error) {
+        lastError = error
+        showError = true
+        
+        if let haloError = error as? HaloError {
+            Logger.deviceError("Device error: \(haloError.localizedDescription)")
+            
+            // Handle specific error cases
+            switch haloError {
+            case .deviceDisconnected:
+                ringSessionManager.connect()
+            case .bluetoothUnavailable:
+                // Show settings prompt
+                break
+            case .healthKitUnauthorized:
+                // Show permissions prompt
+                break
+            default:
+                break
+            }
+        } else {
+            Logger.deviceError("Unknown error: \(error.localizedDescription)")
+        }
+    }
+    
     private func handleHeartRateResult(_ hrl: HeartRateLog) {
         do {
             let heartRatesWithTimes = try hrl.heartRatesWithTimes()

@@ -33,6 +33,7 @@ import SwiftUI
 
     /// Bluetooth central manager for scanning and connecting
     private var manager: CBCentralManager?
+    var bluetoothService = BluetoothService()
 
     /// Connected Bluetooth peripheral (ring device)
     private var peripheral: CBPeripheral?
@@ -478,6 +479,14 @@ extension RingSessionManager {
     func stopRealTimeStreaming(type: RealTimeReading) {
         sendRealTimeCommand(command: RingSessionManager.CMD_STOP_REAL_TIME, type: type, action: nil)
     }
+    
+    func startRawStream(type: RawStreamType) {
+        bluetoothService.startRawStream(type: type)
+    }
+
+    func stopRawStream() {
+        bluetoothService.stopRawStream()
+    }
 
     /// Sends a real-time command packet to the ring device
     ///
@@ -607,7 +616,8 @@ extension RingSessionManager {
             let xPacket = try makePacket(command: Counter.shared.CMD_X, subData: nil)
             sendPacket(packet: xPacket)
         } catch {
-            print("Failed to create blink twice packet: \(error)")
+            Logger.deviceError("Failed to create X command packet: \(error)")
+            // Notify delegate/handler of error
         }
     }
 }

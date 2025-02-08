@@ -1,29 +1,26 @@
 import SwiftUI
 
+/// Controls for managing different types of data streams from the ring
 struct StreamingControls: View {
     @ObservedObject var viewModel: RingViewModel
     let type: StreamingType
 
     var body: some View {
         Section {
-            VStack(spacing: ViewConstants.Spacing.medium) {
-                Button(action: {
-                    viewModel.ringSessionManager.startRealTimeStreaming(type: type.realTimeReading)
-                }) {
-                    ActionButton(title: "Start \(type.rawValue) Streaming", color: ViewConstants.Colors.success)
+            NavigationLink {
+                DashboardView(viewModel: viewModel)
+            } label: {
+                HStack {
+                    Image(systemName: "waveform.path.ecg")
+                    Text("View Live Dashboard")
                 }
-
-                Button(action: {
-                    viewModel.ringSessionManager.continueRealTimeStreaming(type: type.realTimeReading)
-                }) {
-                    ActionButton(title: "Continue \(type.rawValue) Streaming", color: ViewConstants.Colors.warning)
-                }
-
-                Button(action: {
-                    viewModel.ringSessionManager.stopRealTimeStreaming(type: type.realTimeReading)
-                }) {
-                    ActionButton(title: "Stop \(type.rawValue) Streaming", color: ViewConstants.Colors.error)
-                }
+            }
+            .buttonStyle(.borderedProminent)
+            
+            if type == .raw {
+                RawStreamControls(viewModel: viewModel)
+            } else {
+                StandardStreamControls(viewModel: viewModel, type: type)
             }
         } header: {
             Text(type.rawValue)
@@ -32,12 +29,19 @@ struct StreamingControls: View {
     }
 }
 
+/// Types of data streams available from the ring device
 enum StreamingType: String {
+    /// Heart rate monitoring stream
     case heartRate = "Heart Rate"
+    /// Blood oxygen level stream
     case spo2 = "SPO2"
+    /// X-axis acceleration stream
     case accelerometerX = "Accelerometer X"
+    /// Y-axis acceleration stream
     case accelerometerY = "Accelerometer Y"
+    /// Z-axis acceleration stream
     case accelerometerZ = "Accelerometer Z"
+    /// Raw sensor data stream
     case raw = "Raw Data"
 
     var iconName: String {
@@ -52,6 +56,8 @@ enum StreamingType: String {
             "arrow.up.and.down"
         case .accelerometerZ:
             "arrow.clockwise"
+        case .raw:
+            "waveform.path"
         }
     }
     
@@ -67,6 +73,8 @@ enum StreamingType: String {
             return .accelerometerY
         case .accelerometerZ:
             return .accelerometerZ
+        case .raw:
+            return .heartRate // Default to heartRate for raw type, since raw uses a different streaming mechanism
         }
     }
 }
@@ -84,5 +92,65 @@ struct StreamingControls_Previews: PreviewProvider {
             )
         }
         .listStyle(.insetGrouped)
+    }
+}
+private struct StandardStreamControls: View {
+    @ObservedObject var viewModel: RingViewModel
+    let type: StreamingType
+    
+    var body: some View {
+        VStack(spacing: ViewConstants.Spacing.medium) {
+            Button(action: {
+                viewModel.ringSessionManager.startRealTimeStreaming(type: type.realTimeReading)
+            }) {
+                ActionButton(title: "Start \(type.rawValue) Streaming", color: ViewConstants.Colors.success)
+            }
+
+            Button(action: {
+                viewModel.ringSessionManager.continueRealTimeStreaming(type: type.realTimeReading)
+            }) {
+                ActionButton(title: "Continue \(type.rawValue) Streaming", color: ViewConstants.Colors.warning)
+            }
+
+            Button(action: {
+                viewModel.ringSessionManager.stopRealTimeStreaming(type: type.realTimeReading)
+            }) {
+                ActionButton(title: "Stop \(type.rawValue) Streaming", color: ViewConstants.Colors.error)
+            }
+        }
+    }
+}
+
+private struct RawStreamControls: View {
+    @ObservedObject var viewModel: RingViewModel
+    @State private var selectedStreamType: RawStreamType = .blood
+    
+    var body: some View {
+        VStack(spacing: ViewConstants.Spacing.medium) {
+            Picker("Stream Type", selection: $selectedStreamType) {
+                Text("Blood").tag(RawStreamType.blood)
+                Text("HRS").tag(RawStreamType.hrs)
+                Text("Accelerometer").tag(RawStreamType.accelerometer)
+            }
+            .pickerStyle(.segmented)
+            .padding(.bottom)
+            
+            if viewModel.isRawStreaming {
+                Text("Active Stream: \(selectedStreamType.rawValue)")
+                    .foregroundColor(.green)
+            }
+            
+            Button(action: {
+                viewModel.ringSessionManager.startRawStream(type: selectedStreamType)
+            }) {
+                ActionButton(title: "Start Raw Stream", color: ViewConstants.Colors.success)
+            }
+            
+            Button(action: {
+                viewModel.ringSessionManager.stopRawStream()
+            }) {
+                ActionButton(title: "Stop Raw Stream", color: ViewConstants.Colors.error)
+            }
+        }
     }
 }

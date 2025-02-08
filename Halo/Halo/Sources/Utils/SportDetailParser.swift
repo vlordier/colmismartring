@@ -1,5 +1,13 @@
 import Foundation
 
+/// Parser for sport and activity data from the ring device
+/// Handles both legacy and new calorie calculation protocols
+/// Processes data packets into SportDetail objects containing:
+/// - Activity timestamps
+/// - Calorie counts
+/// - Step counts
+/// - Distance measurements
+
 private func bcdToDecimal(_ bcd: UInt8) -> Int {
     ((Int(bcd) >> 4) * 10) + (Int(bcd) & 0x0F)
 }

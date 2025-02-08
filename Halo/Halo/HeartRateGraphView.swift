@@ -9,55 +9,62 @@ import Charts
 import SwiftUI
 
 struct HeartRateDataPoint: Identifiable {
-    let id = UUID()
-    let heartRate: Int
-    let time: Date
+    let id = UUID() // Unique identifier for each data point
+    let heartRate: Int // Heart rate value
+    let time: Date // Timestamp of the heart rate measurement
 }
 
 struct HeartRateGraphView: View {
-    let data: [HeartRateDataPoint]
-    private var dateFormatter: DateFormatter {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter
-    }
+    let heartRateDataPoints: [HeartRateDataPoint] // Array of heart rate data points
+
+    // Formatter for displaying time in a short style
+    private static let timeFormatter: DateFormatter = {
+        let timeFormatter = DateFormatter()
+        timeFormatter.timeStyle = .short
+        return timeFormatter
+    }()
 
     // MARK: - Body
 
     var body: some View {
-        VStack(alignment: .leading, spacing: ViewConstants.Spacing.medium) {
-            if data.isEmpty {
+        VStack(alignment: .leading, spacing: 16) { // Layout stack with consistent spacing
+            // Check if there is any heart rate data to display
+            if heartRateDataPoints.isEmpty {
                 EmptyStateView()
             } else {
                 Text("Heart Rate Over Time")
-                    .font(.system(size: ViewConstants.FontSize.title, weight: .bold))
+                    .font(.system(size: 20, weight: .bold)) // Set title font size and weight
                     .padding(.horizontal)
 
                 Chart {
-                    ForEach(data) { point in
+                    // Plot each valid heart rate data point on the graph
+                    ForEach(filterValidHeartRateDataPoints(heartRateDataPoints)) { dataPoint in
                         LineMark(
-                            x: .value("Time", point.time),
-                            y: .value("Heart Rate", point.heartRate)
+                            x: .value("Time", dataPoint.time),
+                            y: .value("Heart Rate", dataPoint.heartRate)
                         )
                         .interpolationMethod(.monotone)
-                        .foregroundStyle(ViewConstants.Colors.primary)
+                        .foregroundStyle(.red) // Set line color for heart rate data
                     }
                 }
                 .chartYAxis {
-                    AxisMarks(position: .leading, values: .automatic(desiredCount: 6)) { value in
-                        if let heartRate = value.as(Int.self) {
-                            AxisValueLabel {
-                                Text("\(heartRate) bpm")
+                    // Configure y-axis with automatic tick marks for heart rate
+                    AxisMarks(position: .leading, values: .automatic(desiredCount: 6)) { axisValue in
+                        if let heartRateValue = axisValue.as(Int.self) {
+                            // Display heart rate value with units on y-axis
+                            AxisValueLabel { // Implicit return
+                                Text("\(heartRateValue) bpm") // Display heart rate with units
                                     .font(.caption)
                             }
                         }
                     }
                 }
                 .chartXAxis {
-                    AxisMarks(values: .stride(by: 900)) { value in
-                        if let date = value.as(Date.self) {
-                            AxisValueLabel {
-                                Text(dateFormatter.string(from: date))
+                    // Configure x-axis with automatic tick marks for time
+                    AxisMarks(values: .automatic) { axisValue in
+                        if let dateValue = axisValue.as(Date.self) {
+                            AxisValueLabel { // Implicit return
+                                Text(Self.timeFormatter.string(from: dateValue)) // Format and display date labels
                                     .font(.caption)
                             }
                         }
@@ -69,11 +76,16 @@ struct HeartRateGraphView: View {
             }
         }
     }
+
+    // Validate data points to ensure heart rate values are within a realistic range
+    private func filterValidHeartRateDataPoints(_ dataPoints: [HeartRateDataPoint]) -> [HeartRateDataPoint] {
+        return dataPoints.filter { $0.heartRate > 30 && $0.heartRate < 220 }
+    }
 }
 
 private struct EmptyStateView: View {
     var body: some View {
-        VStack(spacing: ViewConstants.Spacing.medium) {
+        VStack(spacing: 16) { // Replaced ViewConstants.Spacing.medium with 16
             Image(systemName: "heart.circle")
                 .font(.system(size: 48))
                 .foregroundColor(.gray)

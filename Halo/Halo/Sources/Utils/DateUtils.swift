@@ -67,9 +67,7 @@ func datesBetween(start: Date, end: Date) throws -> [Date] {
 /// and potential future timestamp standardization.
 ///
 /// - Returns: Current date and time as Date object
-func now() -> Date {
-    Date()
-}
+func now() -> Date { Date() }
 
 /// Calculates the number of minutes elapsed since midnight for a given date
 ///
@@ -92,6 +90,4 @@ func minutesSoFar(on date: Date) -> Int? {
 ///
 /// - Parameter date: The date to check
 /// - Returns: true if the date is today, false otherwise
-func isToday(date: Date) -> Bool {
-    return Calendar.current.isDateInToday(date)
-}
+func isToday(date: Date) -> Bool { Calendar.current.isDateInToday(date) }

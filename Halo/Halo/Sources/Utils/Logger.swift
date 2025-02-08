@@ -2,6 +2,8 @@ import Foundation
 import os.log
 
 /// Centralized logging system for the Halo app
+/// Provides structured logging capabilities with different categories and severity levels
+/// Logs are sent to both system log and debug console (in DEBUG builds)
 enum Logger {
     /// Categories of logs for different parts of the system
     private enum Category: String {

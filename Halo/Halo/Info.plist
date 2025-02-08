@@ -18,9 +18,17 @@
 		<string>external-accessory</string>
 		<string>bluetooth-central</string>
 	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>This app needs to write heart rate data to HealthKit to track your measurements from the ring.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>This app needs to read heart rate data from HealthKit to show your measurement history.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs microphone access to display audio visualizations.</string>
 </dict>
 </plist>

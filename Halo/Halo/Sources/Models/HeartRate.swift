@@ -128,9 +128,6 @@ class Counter {
     }
 }
 
-/// Global counter instance for convenience
-let counter = Counter()
-
 // MARK: - Packet Creation Helper Functions
 
 /// Creates a packet to request heart rate data for a specific date
@@ -153,20 +150,6 @@ func readXPacket(for target: Date) throws -> [UInt8] {
     let timestamp = Int(target.timeIntervalSince1970)
     let data = withUnsafeBytes(of: UInt32(timestamp).littleEndian) { Array($0) }
     return try makePacket(command: Counter.shared.CMD_X, subData: data)
-}
-
-func addTimes(heartRates: [Int], timestamp: Date) throws -> [(Int, Date)] {
-    guard heartRates.count == 288 else {
-        throw HaloError.invalidDataFormat("Heart rate count must be 288, got \(heartRates.count)")
-    }
-    var result: [(Int, Date)] = []
-    var current = Calendar.current.startOfDay(for: timestamp)
-    let interval = TimeInterval(5 * 60) // 5 minutes
-    for hr in heartRates {
-        result.append((hr, current))
-        current.addTimeInterval(interval)
-    }
-    return result
 }
 
 /// Represents a complete log of heart rate measurements for a specific time period
@@ -199,8 +182,8 @@ struct HeartRateLog {
     /// - Returns: Array of (heartRate, timestamp) tuples
     /// - Throws: HeartRateError if the data format is invalid
     func heartRatesWithTimes() throws -> [(Int, Date)] {
-        try addTimes(heartRates: heartRates, timestamp: timestamp)
-            .filter { $0.0 != 0 }
+        let parser = HeartRateParser()
+        return try parser.parseHeartRates(heartRates, timestamp: timestamp)
     }
 }
 
