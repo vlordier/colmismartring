@@ -21,10 +21,10 @@ let CMD_READ_HEART_RATE: UInt8 = 21
 /// - 53: Toggle stress detection (1=ON, 2=OFF)
 /*
  Received value: 16 bytes : [3, 62, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65]
- 
+
  Received value: 16 bytes : [7, 0, 128, 36, 9, 33, 0, 0, 0, 0, 0, 0, 0, 2, 242, 201]
  Received value: 16 bytes : [7, 1, 128, 36, 9, 33, 0, 0, 0, 0, 0, 0, 0, 0, 0, 214]
- 
+
  Received value: 16 bytes : [7, 0, 0, 37, 1, 39, 0, 0, 44, 0, 0, 0, 0, 9, 248, 129]
  Received value: 16 bytes : [7, 1, 0, 37, 1, 39, 0, 0, 0, 0, 2, 0, 0, 0, 0, 87]
  HRL Commmand Sent
@@ -33,22 +33,22 @@ let CMD_READ_HEART_RATE: UInt8 = 21
  Received value: 16 bytes : [7, 0, 128, 36, 9, 33, 0, 0, 0, 0, 0, 0, 0, 9, 248, 214]
  🔥
  Received value: 16 bytes : [7, 1, 128, 36, 9, 33, 0, 0, 0, 0, 0, 0, 0, 0, 0, 214]
- 
-Received value: 16 bytes : [10, 2, 204, 150, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 110]
-Received value: 16 bytes : [67, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 66]
-Received value: 16 bytes : [67, 255, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 67]
-Received value: 16 bytes : [67, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 66]
-Received value: 16 bytes : [72, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 72]
- 
- 
+
+ Received value: 16 bytes : [10, 2, 204, 150, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 110]
+ Received value: 16 bytes : [67, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 66]
+ Received value: 16 bytes : [67, 255, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 67]
+ Received value: 16 bytes : [67, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 66]
+ Received value: 16 bytes : [72, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 72]
+
+
  Received value: 16 bytes : [67, 240, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 53]
  Received value: 16 bytes : [67, 37, 1, 39, 56, 0, 1, 255, 0, 44, 0, 36, 0, 0, 0, 24]
  Received value: 16 bytes : [67, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 66]
  Received value: 16 bytes : [72, 0, 0, 44, 0, 0, 0, 0, 9, 248, 0, 0, 36, 0, 2, 155]
- 
+
  44 steps?
  2 kcal?
- 
+
  Received value: 16 bytes : [72, 0, 0, 44, 0, 0, 0, 0, 9, 248, 0, 0, 36, 0, 2, 155]
  Received value: 16 bytes : [67, 240, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 53]
  Received value: 16 bytes : [67, 37, 1, 39, 56, 0, 1, 255, 0, 44, 0, 36, 0, 0, 0, 24]
@@ -82,20 +82,20 @@ Received value: 16 bytes : [72, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 72]
  Received value: 16 bytes : [115, 18, 0, 0, 78, 0, 17, 172, 0, 0, 64, 0, 0, 0, 0, 208]
  Received value: 16 bytes : [115, 18, 0, 0, 79, 0, 17, 230, 0, 0, 65, 0, 0, 0, 0, 12]
  Received value: 16 bytes : [115, 18, 0, 0, 79, 0, 17, 230, 0, 0, 65, 0, 0, 0, 0, 12]
- 
- 
+
+
  21 is read HR
  Received value: 16 bytes : [22, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26] HR Detection OFF
  Received value: 16 bytes : [22, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25] HR Detection ON
- 
+
  55 is read HRV -> Yes
  Received value: 16 bytes : [56, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 60] HRV Detection OFF
  Received value: 16 bytes : [56, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 59] HRV Detection ON
- 
+
  43 is read SPO2?
  Received value: 16 bytes : [44, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 46] SPO2 Detection OFF
  Received value: 16 bytes : [44, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 47] SPO2 Detection ON
- 
+
  53 is read stress?
  Received value: 16 bytes : [54, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 56] Stress Detection OFF
  Received value: 16 bytes : [54, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 57] Stress Detection ON
@@ -114,18 +114,16 @@ Received value: 16 bytes : [72, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 72]
 // 67 gave a stream on command
 // 68 did something also as command
 
-
-
 /// Manages command cycling for testing different sensor modes
 /// This class helps in debugging and testing different sensor commands
 /// by providing a way to increment through various command values
 class Counter {
     /// Singleton instance for global access
     static let shared = Counter()
-    
+
     /// Current command value, starting with SPO2 detection (43)
     var CMD_X: UInt8 = 43
-    
+
     /// Increments the command value to test different sensor modes
     func increment() {
         CMD_X += 1
@@ -137,7 +135,7 @@ let counter = Counter()
 // MARK: - Packet Creation Helper Functions
 
 /// Creates a packet to request heart rate data for a specific date
-/// 
+///
 /// This function creates a properly formatted packet to request historical heart rate data
 /// from the ring device. The target date is converted to a Unix timestamp and included
 /// in the packet's data section.
@@ -180,29 +178,29 @@ func addTimes(heartRates: [Int], timestamp: Date) throws -> [(Int, Date)] {
 struct HeartRateLog {
     /// Array of heart rate values (typically 288 values for a full day)
     var heartRates: [Int]
-    
+
     /// Raw packet data for debugging purposes
     var allPackets: [UInt8] = []
-    
+
     /// Start timestamp for the heart rate measurements
     var timestamp: Date
-    
+
     /// Number of hours of data contained in the log
     var size: Int
-    
+
     /// Current processing index
     var index: Int
-    
+
     /// Sampling interval in minutes (typically 5)
     var range: Int
-    
+
     /// Returns an array of tuples containing heart rate values and their corresponding timestamps
     /// Filters out zero values which indicate invalid or missing readings
     ///
     /// - Returns: Array of (heartRate, timestamp) tuples
     /// - Throws: HeartRateError if the data format is invalid
     func heartRatesWithTimes() throws -> [(Int, Date)] {
-        return try addTimes(heartRates: heartRates, timestamp: timestamp)
+        try addTimes(heartRates: heartRates, timestamp: timestamp)
             .filter { $0.0 != 0 }
     }
 }
@@ -219,11 +217,11 @@ class HeartRateLogParser {
     private(set) var index = 0
     private(set) var end = false
     private(set) var range = 5
-    
+
     init() {
         reset()
     }
-    
+
     func reset() {
         rawHeartRates = []
         timestamp = nil
@@ -232,12 +230,12 @@ class HeartRateLogParser {
         end = false
         range = 5
     }
-    
+
     func isToday() -> Bool {
         guard let timestamp = timestamp else { return false }
         return Calendar.current.isDateInToday(timestamp)
     }
-    
+
     // The first byte is the heartrate command
     // The second byte is the subtype (the how manieth packet out of the total size)
     // The third until fifteenth byte are the data (13 bytes)
@@ -245,18 +243,18 @@ class HeartRateLogParser {
     func parse(packet: [UInt8]) -> Any? {
         guard packet.count >= 16 else { return nil }
         let subType = packet[1]
-        
+
         let dataSize = 13
-        
+
         print(packet)
         allPackets += packet
-        
+
         if subType == 255 {
             print("Error: Invalid response from heart rate log request")
             reset()
             return NoData()
         }
-        
+
         if isToday() && subType == 23 {
             guard let timestamp = timestamp else { return nil }
             let log = HeartRateLog(
@@ -270,23 +268,23 @@ class HeartRateLogParser {
             reset()
             return log
         }
-        
+
         if subType == 0 {
             end = false
-            
+
             size = Int(packet[2])
             print("Measurements of the last \(size) hours.")
-            
+
             range = Int(packet[3])
             print("Measured every \(range) minutes")
-            
+
             rawHeartRates = Array(repeating: -1, count: size * dataSize)
             return nil
         } else if subType == 1 {
             // Safely extract timestamp using timestampToDate
             let ts = extractTimestamp(from: packet)
             timestamp = timestampToDate(timestamp: ts)
-            
+
             // Safely replace subrange of rawHeartRates
             let startRange = 0..<9
             let packetRange = 6..<15
@@ -319,7 +317,7 @@ class HeartRateLogParser {
             return nil
         }
     }
-    
+
     var heartRates: [Int] {
         var hr = rawHeartRates
         if hr.count > 288 {
@@ -327,7 +325,7 @@ class HeartRateLogParser {
         } else if hr.count < 288 {
             hr.append(contentsOf: Array(repeating: 0, count: 288 - hr.count))
         }
-        
+
         if isToday() {
             let minutesElapsed = (Calendar.current.dateComponents([.minute], from: Calendar.current.startOfDay(for: Date()), to: Date()).minute ?? 0) / 5
             for i in minutesElapsed..<hr.count {
@@ -345,20 +343,20 @@ enum HeartRateError: Error {
 
 func extractTimestamp(from packet: [UInt8]) -> UInt32 {
     let timestamp = UInt32(packet[2]) |
-    UInt32(packet[3]) << 8 |
-    UInt32(packet[4]) << 16 |
-    UInt32(packet[5]) << 24
+        UInt32(packet[3]) << 8 |
+        UInt32(packet[4]) << 16 |
+        UInt32(packet[5]) << 24
     return timestamp
 }
 
 // Adjust this function to handle UTC time
 func timestampToDate(timestamp: UInt32) -> Date {
-    return Date(timeIntervalSince1970: TimeInterval(timestamp))
+    Date(timeIntervalSince1970: TimeInterval(timestamp))
 }
 
 extension Date {
     func convertToTimeZone(initTimeZone: TimeZone, timeZone: TimeZone) -> Date {
-         let delta = TimeInterval(timeZone.secondsFromGMT(for: self) - initTimeZone.secondsFromGMT(for: self))
-         return addingTimeInterval(delta)
+        let delta = TimeInterval(timeZone.secondsFromGMT(for: self) - initTimeZone.secondsFromGMT(for: self))
+        return addingTimeInterval(delta)
     }
 }

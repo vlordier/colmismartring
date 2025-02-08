@@ -15,7 +15,7 @@ import Foundation
 struct BatteryInfo {
     /// Current battery level as a percentage (0-100)
     let batteryLevel: Int
-    
+
     /// Whether the device is currently being charged
     /// - true: Device is connected to power and charging
     /// - false: Device is running on battery power

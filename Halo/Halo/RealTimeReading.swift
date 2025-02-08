@@ -15,28 +15,28 @@ import Foundation
 enum RealTimeReading: UInt8 {
     /// Real-time heart rate monitoring (beats per minute)
     case heartRate = 1
-    
+
     /// Blood pressure measurement (systolic/diastolic)
     case bloodPressure = 2
-    
+
     /// Blood oxygen saturation level (percentage)
     case spo2 = 3
-    
+
     /// Fatigue level assessment
     case fatigue = 4
-    
+
     /// General health status check
     case healthCheck = 5
-    
+
     /// Electrocardiogram measurement
     case ecg = 7
-    
+
     /// Blood pressure wave measurement
     case pressure = 8
-    
+
     /// Blood glucose level estimation
     case bloodSugar = 9
-    
+
     /// Heart Rate Variability measurement
     case hrv = 10
 }
@@ -49,13 +49,13 @@ enum RealTimeReading: UInt8 {
 enum Action: UInt8 {
     /// Begin real-time data streaming
     case start = 1
-    
+
     /// Temporarily suspend data streaming
     case pause = 2
-    
+
     /// Resume previously paused data streaming
     case `continue` = 3
-    
+
     /// Terminate data streaming
     case stop = 4
 }
