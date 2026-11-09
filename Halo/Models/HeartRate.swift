@@ -122,11 +122,9 @@ class Counter {
     static let shared = Counter()
 
     /// Current command value, starting with SPO2 detection (43)
-    var CMD_X: UInt8 = 43
 
     /// Increments the command value to test different sensor modes
     func increment() {
-        CMD_X += 1
     }
 }
 
@@ -153,7 +151,6 @@ func readXPacket(for target: Date) throws -> [UInt8] {
     // Target datetime should be at midnight for the day of interest
     let timestamp = Int(target.timeIntervalSince1970)
     let data = withUnsafeBytes(of: UInt32(timestamp).littleEndian) { Array($0) }
-    return try makePacket(command: Counter.shared.CMD_X, subData: data)
 }
 
 func addTimes(heartRates: [Int], timestamp: Date) throws -> [(Int, Date)] {
